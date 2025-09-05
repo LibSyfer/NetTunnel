@@ -144,6 +144,7 @@ namespace NetTunnel.Core
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Process request error: {ErrorMessage}", ex.Message);
+                    break;
                 }
             }
 

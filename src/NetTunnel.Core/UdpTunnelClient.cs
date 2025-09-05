@@ -131,6 +131,7 @@ namespace NetTunnel.Core
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Processing requests error: {ErrorMessage}", ex.Message);
+                    break;
                 }
             }
 
@@ -192,6 +193,7 @@ namespace NetTunnel.Core
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Processing replies error: {ErrorMessage}", ex.Message);
+                    break;
                 }
             }
 
