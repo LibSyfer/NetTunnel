@@ -88,6 +88,7 @@ namespace NetTunnel.Core
 
         private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Start processing requests packets");
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -134,11 +135,17 @@ namespace NetTunnel.Core
                         ArrayPool<byte>.Shared.Return(signBuffer);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Process request error: {ErrorMessage}", ex.Message);
                 }
             }
+
+            _logger.LogInformation("Stop processing requests packets");
         }
     }
 }
