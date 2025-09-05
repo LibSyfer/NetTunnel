@@ -43,7 +43,7 @@ namespace NetTunnel.Core
             _serverEndpoint = serverEndpoint;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken = default)
         {
             if (_isRunning) return Task.CompletedTask;
 
@@ -93,81 +93,109 @@ namespace NetTunnel.Core
 
         private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Start processing requests packets on {ListenEndpoint}", _listenerClient.Client.LocalEndPoint);
             while (!cancellationToken.IsCancellationRequested)
             {
-                var result = await _listenerClient.ReceiveAsync(cancellationToken);
-                var packet = result.Buffer;
-                var packetLength = result.Buffer.Length;
-
-                if (SourceEndpoint != result.RemoteEndPoint)
-                {
-                    _logger.LogInformation("Changing source endpoint");
-                    SourceEndpoint = result.RemoteEndPoint;
-                }
-
-                var buffer = ArrayPool<byte>.Shared.Rent(packetLength + _signLength);
-
                 try
                 {
-                    var sign = _hmac.ComputeHash(result.Buffer);
+                    var result = await _listenerClient.ReceiveAsync(cancellationToken);
+                    var packet = result.Buffer;
+                    var packetLength = result.Buffer.Length;
 
-                    Buffer.BlockCopy(result.Buffer, 0, buffer, 0, result.Buffer.Length);
-                    Buffer.BlockCopy(sign, 0, buffer, result.Buffer.Length, sign.Length);
+                    if (SourceEndpoint != result.RemoteEndPoint)
+                    {
+                        _logger.LogInformation("Changing source endpoint");
+                        SourceEndpoint = result.RemoteEndPoint;
+                    }
 
-                    await _forwardClient.SendAsync(new ReadOnlyMemory<byte>(buffer), _serverEndpoint, cancellationToken);
+                    var buffer = ArrayPool<byte>.Shared.Rent(packetLength + _signLength);
+
+                    try
+                    {
+                        var sign = _hmac.ComputeHash(result.Buffer);
+
+                        Buffer.BlockCopy(result.Buffer, 0, buffer, 0, result.Buffer.Length);
+                        Buffer.BlockCopy(sign, 0, buffer, result.Buffer.Length, sign.Length);
+
+                        await _forwardClient.SendAsync(new ReadOnlyMemory<byte>(buffer), _serverEndpoint, cancellationToken);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(buffer);
+                    }
                 }
-                finally
+                catch (OperationCanceledException)
                 {
-                    ArrayPool<byte>.Shared.Return(buffer);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Processing requests error: {ErrorMessage}", ex.Message);
                 }
             }
+
+            _logger.LogInformation("Stop processing requests packets on {ListenEndpoint}", _listenerClient.Client.LocalEndPoint);
         }
 
         private async Task ProcessRepliesAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Start processing replies packets from {ListenEndpoint}", _serverEndpoint);
             while (!cancellationToken.IsCancellationRequested)
             {
-                var result = await _forwardClient.ReceiveAsync(cancellationToken);
-                if (result.Buffer.Length < _signLength)
-                {
-                    _logger.LogInformation("Receive reply packet with wrong singature");
-                    continue;
-                }
-
-                var packetLength = result.Buffer.Length - _signLength;
-
-                var buffer = ArrayPool<byte>.Shared.Rent(packetLength);
-                var signBuffer = ArrayPool<byte>.Shared.Rent(_signLength);
-
                 try
                 {
-                    Buffer.BlockCopy(result.Buffer, 0, buffer, 0, packetLength);
-                    Buffer.BlockCopy(result.Buffer, packetLength, signBuffer, 0, _signLength);
-
-                    var expectedSign = _hmac.ComputeHash(buffer, 0, packetLength);
-
-                    var isValid = CryptographicOperations.FixedTimeEquals(expectedSign, signBuffer);
-
-                    if (!isValid)
+                    var result = await _forwardClient.ReceiveAsync(cancellationToken);
+                    if (result.Buffer.Length < _signLength)
                     {
                         _logger.LogInformation("Receive reply packet with wrong singature");
                         continue;
                     }
 
-                    if (SourceEndpoint == null)
-                    {
-                        _logger.LogError("Source endpoint is null. Drop packet");
-                        continue;
-                    }
+                    var packetLength = result.Buffer.Length - _signLength;
 
-                    await _listenerClient.SendAsync(new ReadOnlyMemory<byte>(buffer, 0, packetLength), SourceEndpoint, cancellationToken);
+                    var buffer = ArrayPool<byte>.Shared.Rent(packetLength);
+                    var signBuffer = ArrayPool<byte>.Shared.Rent(_signLength);
+
+                    try
+                    {
+                        Buffer.BlockCopy(result.Buffer, 0, buffer, 0, packetLength);
+                        Buffer.BlockCopy(result.Buffer, packetLength, signBuffer, 0, _signLength);
+
+                        var expectedSign = _hmac.ComputeHash(buffer, 0, packetLength);
+
+                        var isValid = CryptographicOperations.FixedTimeEquals(expectedSign, signBuffer);
+
+                        if (!isValid)
+                        {
+                            _logger.LogInformation("Receive reply packet with wrong singature");
+                            continue;
+                        }
+
+                        if (SourceEndpoint == null)
+                        {
+                            _logger.LogError("Source endpoint is null. Drop packet");
+                            continue;
+                        }
+
+                        await _listenerClient.SendAsync(new ReadOnlyMemory<byte>(buffer, 0, packetLength), SourceEndpoint, cancellationToken);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(buffer);
+                        ArrayPool<byte>.Shared.Return(signBuffer);
+                    }
                 }
-                finally
+                catch (OperationCanceledException)
                 {
-                    ArrayPool<byte>.Shared.Return(buffer);
-                    ArrayPool<byte>.Shared.Return(signBuffer);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Processing replies error: {ErrorMessage}", ex.Message);
                 }
             }
+
+            _logger.LogInformation("Stop processing replies packets from {ListenEndpoint}", _serverEndpoint);
         }
     }
 }
