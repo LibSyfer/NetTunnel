@@ -18,6 +18,8 @@ namespace NetTunnel.Core
         private readonly byte[] _preSharedKey;
         private ConcurrentDictionary<IPEndPoint, UdpClientSession> _sessions = new();
 
+        private Task? _processingRequestsTask;
+
         private CancellationTokenSource? _cts;
         private bool _isRunning = false;
         private object _lock = new object();
@@ -48,7 +50,7 @@ namespace NetTunnel.Core
 
             try
             {
-                _ = ProcessRequestsAsync(_cts.Token);
+                _processingRequestsTask = ProcessRequestsAsync(_cts.Token);
             }
             catch (Exception ex)
             {
@@ -58,19 +60,19 @@ namespace NetTunnel.Core
             return Task.CompletedTask;
         }
 
-        public Task StopAsync()
+        public async Task StopAsync()
         {
-            if (! _isRunning) return Task.CompletedTask;
+            if (! _isRunning) return;
 
             lock (_lock)
             {
-                if (!_isRunning) return Task.CompletedTask;
+                if (!_isRunning) return;
                 _isRunning = false;
 
                 _cts?.Cancel();
             }
 
-            return Task.CompletedTask;
+            await _processingRequestsTask!;
         }
 
         public void Dispose()
