@@ -22,6 +22,7 @@ namespace NetTunnel.Core
 
         private CancellationTokenSource? _cts;
         private bool _isRunning = false;
+        private bool _isDisposed = false;
         private object _lock = new object();
 
         private const int _signLength = 32;
@@ -38,11 +39,11 @@ namespace NetTunnel.Core
 
         public Task StartAsync(CancellationToken cancellationToken = default)
         {
-            if (_isRunning) return Task.CompletedTask;
+            if (_isRunning || _isDisposed) return Task.CompletedTask;
 
             lock (_lock)
             {
-                if (_isRunning) return Task.CompletedTask;
+                if (_isRunning || _isDisposed) return Task.CompletedTask;
                 _isRunning = true;
 
                 _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -62,7 +63,7 @@ namespace NetTunnel.Core
 
         public async Task StopAsync()
         {
-            if (! _isRunning) return;
+            if (!_isRunning) return;
 
             lock (_lock)
             {
@@ -77,15 +78,22 @@ namespace NetTunnel.Core
 
         public void Dispose()
         {
-            _cts?.Dispose();
-            _hmac?.Dispose();
-            _listenerClient?.Dispose();
+            if (_isDisposed) return;
 
-            foreach (var session in _sessions.Values)
+            lock (_lock)
             {
-                session.Dispose();
+                if (_isDisposed) return;
+                _isDisposed = true;
+                _cts?.Dispose();
+                _hmac?.Dispose();
+                _listenerClient?.Dispose();
+
+                foreach (var session in _sessions.Values)
+                {
+                    session.Dispose();
+                }
+                _sessions.Clear();
             }
-            _sessions.Clear();
         }
 
         private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
