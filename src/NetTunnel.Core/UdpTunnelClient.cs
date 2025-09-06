@@ -111,26 +111,32 @@ namespace NetTunnel.Core
                     var packet = result.Buffer;
                     var packetLength = result.Buffer.Length;
 
-                    if (SourceEndpoint != result.RemoteEndPoint)
+                    _logger.LogDebug("Receive {DatagramLength}bytes from {TargerEndpoint}", packetLength, result.RemoteEndPoint);
+                    var sourceEndpoint = SourceEndpoint;
+                    if (sourceEndpoint == null || !sourceEndpoint.Equals(result.RemoteEndPoint))
                     {
                         _logger.LogInformation("Changing source endpoint");
                         SourceEndpoint = result.RemoteEndPoint;
                     }
 
-                    var buffer = ArrayPool<byte>.Shared.Rent(packetLength + _signLength);
+                    var tunnelPacketLength = packetLength + _signLength;
+                    var tunnelPacketBuffer = ArrayPool<byte>.Shared.Rent(tunnelPacketLength);
 
                     try
                     {
-                        var sign = _hmac.ComputeHash(result.Buffer);
+                        var sign = _hmac.ComputeHash(packet, 0, packetLength);
 
-                        Buffer.BlockCopy(result.Buffer, 0, buffer, 0, result.Buffer.Length);
-                        Buffer.BlockCopy(sign, 0, buffer, result.Buffer.Length, sign.Length);
+                        Buffer.BlockCopy(packet, 0, tunnelPacketBuffer, 0, packetLength);
+                        Buffer.BlockCopy(sign, 0, tunnelPacketBuffer, packetLength, _signLength);
 
-                        await _forwardClient.SendAsync(new ReadOnlyMemory<byte>(buffer), _serverEndpoint, cancellationToken);
+                        await _forwardClient.SendAsync(
+                            new ReadOnlyMemory<byte>(tunnelPacketBuffer, 0, tunnelPacketLength),
+                            _serverEndpoint,
+                            cancellationToken);
                     }
                     finally
                     {
-                        ArrayPool<byte>.Shared.Return(buffer);
+                        ArrayPool<byte>.Shared.Return(tunnelPacketBuffer);
                     }
                 }
                 catch (OperationCanceledException)
@@ -155,25 +161,30 @@ namespace NetTunnel.Core
                 try
                 {
                     var result = await _forwardClient.ReceiveAsync(cancellationToken);
-                    if (result.Buffer.Length < _signLength)
+                    var tunnelPacket = result.Buffer;
+                    var tunnelPacketLength = result.Buffer.Length;
+
+                    if (tunnelPacketLength < _signLength)
                     {
-                        _logger.LogInformation("Receive reply packet with wrong singature");
+                        _logger.LogInformation("Receive reply packet with wrong length");
                         continue;
                     }
 
                     var packetLength = result.Buffer.Length - _signLength;
 
-                    var buffer = ArrayPool<byte>.Shared.Rent(packetLength);
+                    var packetBuffer = ArrayPool<byte>.Shared.Rent(packetLength);
                     var signBuffer = ArrayPool<byte>.Shared.Rent(_signLength);
 
                     try
                     {
-                        Buffer.BlockCopy(result.Buffer, 0, buffer, 0, packetLength);
+                        Buffer.BlockCopy(result.Buffer, 0, packetBuffer, 0, packetLength);
                         Buffer.BlockCopy(result.Buffer, packetLength, signBuffer, 0, _signLength);
 
-                        var expectedSign = _hmac.ComputeHash(buffer, 0, packetLength);
+                        var expectedSign = _hmac.ComputeHash(packetBuffer, 0, packetLength);
 
-                        var isValid = CryptographicOperations.FixedTimeEquals(expectedSign, signBuffer);
+                        var isValid = CryptographicOperations.FixedTimeEquals(
+                            new ReadOnlySpan<byte>(expectedSign, 0, _signLength),
+                            new ReadOnlySpan<byte>(signBuffer, 0, _signLength));
 
                         if (!isValid)
                         {
@@ -187,11 +198,14 @@ namespace NetTunnel.Core
                             continue;
                         }
 
-                        await _listenerClient.SendAsync(new ReadOnlyMemory<byte>(buffer, 0, packetLength), SourceEndpoint, cancellationToken);
+                        await _listenerClient.SendAsync(
+                            new ReadOnlyMemory<byte>(packetBuffer, 0, packetLength),
+                            SourceEndpoint,
+                            cancellationToken);
                     }
                     finally
                     {
-                        ArrayPool<byte>.Shared.Return(buffer);
+                        ArrayPool<byte>.Shared.Return(packetBuffer);
                         ArrayPool<byte>.Shared.Return(signBuffer);
                     }
                 }

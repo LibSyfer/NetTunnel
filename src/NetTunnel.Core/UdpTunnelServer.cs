@@ -104,10 +104,15 @@ namespace NetTunnel.Core
                 try
                 {
                     var result = await _listenerClient.ReceiveAsync(cancellationToken);
-                    var clientEndpoint = result.RemoteEndPoint;
-                    if (result.Buffer.Length < _signLength)
+                    var tunnelPacket = result.Buffer;
+                    var tunnelPacketLength = result.Buffer.Length;
+                    var tunnelClientEndpoint = result.RemoteEndPoint;
+
+                    _logger.LogDebug("Receive tunnel packet {DatagramLength}bytes from {TargerEndpoint}", tunnelPacketLength, tunnelClientEndpoint);
+
+                    if (tunnelPacketLength < _signLength)
                     {
-                        _logger.LogInformation("Receive reply packet with wrong singature");
+                        _logger.LogInformation("Receive reply packet with wrong length");
                         continue;
                     }
 
@@ -121,23 +126,27 @@ namespace NetTunnel.Core
                         Buffer.BlockCopy(result.Buffer, 0, packetBuffer, 0, packetLength);
                         Buffer.BlockCopy(result.Buffer, packetLength, signBuffer, 0, _signLength);
 
-                        var expectedSign = _hmac.ComputeHash(packetBuffer);
+                        var expectedSign = _hmac.ComputeHash(packetBuffer, 0, packetLength);
 
-                        var isValid = CryptographicOperations.FixedTimeEquals(expectedSign, signBuffer);
+                        var isValid = CryptographicOperations.FixedTimeEquals(
+                            new ReadOnlySpan<byte>(expectedSign, 0, _signLength),
+                            new ReadOnlySpan<byte>(signBuffer, 0, _signLength));
 
                         if (!isValid)
                         {
-                            _logger.LogInformation("Receive reply packet with wrong singature");
+                            _logger.LogWarning("Receive reply packet with wrong singature");
                             continue;
                         }
 
                         var sessionLogger = _sessionLoggerFactory
-                        .CreateLogger($"{typeof(UdpTunnelServer).FullName}-Session-{clientEndpoint}");
-                        var session = _sessions.GetOrAdd(clientEndpoint, e =>
-                            new UdpClientSession(sessionLogger, _hmac, _listenerClient, clientEndpoint));
+                            .CreateLogger($"{typeof(UdpTunnelServer).FullName}-Session-{tunnelClientEndpoint}");
+                        var session = _sessions.GetOrAdd(tunnelClientEndpoint, e =>
+                            new UdpClientSession(sessionLogger, _hmac, _listenerClient, tunnelClientEndpoint));
 
-                        _logger.LogDebug("Send {DatagramLength}bytes to {TargerEndpoint}", packetLength, _targetEndpoint);
-                        await session.SendAsync(packetBuffer, _targetEndpoint, cancellationToken);
+                        await session.SendAsync(
+                            new ReadOnlyMemory<byte>(packetBuffer, 0, packetLength),
+                            _targetEndpoint,
+                            cancellationToken);
                     }
                     finally
                     {

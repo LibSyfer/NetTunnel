@@ -49,25 +49,29 @@ namespace NetTunnel.Core
                 try
                 {
                     var result = await _targetClient.ReceiveAsync(cancellationToken);
-                    _logger.LogDebug("Receive {DatagramLength}bytes from {TargerEndpoint}", result.Buffer.Length, result.RemoteEndPoint);
-
                     var packet = result.Buffer;
                     var packetLength = result.Buffer.Length;
 
-                    var buffer = ArrayPool<byte>.Shared.Rent(packetLength + _signLength);
+                    _logger.LogDebug("Receive {DatagramLength}bytes from {TargerEndpoint}", packetLength, result.RemoteEndPoint);
+
+                    var tunnelPacketLength = packetLength + _signLength;
+                    var tunnelPacketBuffer = ArrayPool<byte>.Shared.Rent(tunnelPacketLength);
+
                     try
                     {
-                        var sign = _hmac.ComputeHash(packet);
+                        var sign = _hmac.ComputeHash(packet, 0, packetLength);
 
-                        Buffer.BlockCopy(packet, 0, buffer, 0, packetLength);
-                        Buffer.BlockCopy(sign, 0, buffer, packetLength, sign.Length);
+                        Buffer.BlockCopy(packet, 0, tunnelPacketBuffer, 0, packetLength);
+                        Buffer.BlockCopy(sign, 0, tunnelPacketBuffer, packetLength, _signLength);
 
-                        _logger.LogDebug("Send {DatagramLength}bytes to {TargerEndpoint}", packetLength, _replyEndpoint);
-                        await _replyClient.SendAsync(new ReadOnlyMemory<byte>(buffer), _replyEndpoint, cancellationToken);
+                        await _replyClient.SendAsync(
+                            new ReadOnlyMemory<byte>(tunnelPacketBuffer, 0, tunnelPacketLength),
+                            _replyEndpoint,
+                            cancellationToken);
                     }
                     finally
                     {
-                        ArrayPool<byte>.Shared.Return(buffer);
+                        ArrayPool<byte>.Shared.Return(tunnelPacketBuffer);
                     }
                 }
                 catch (Exception ex)
