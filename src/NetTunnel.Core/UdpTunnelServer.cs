@@ -19,6 +19,8 @@ namespace NetTunnel.Core
         private ConcurrentDictionary<IPEndPoint, UdpClientSession> _sessions = new();
 
         private Task? _processingRequestsTask;
+        private readonly Timer _cleanupTimer;
+        private readonly TimeSpan _sessionTimeout;
 
         private CancellationTokenSource? _cts;
         private bool _isRunning = false;
@@ -27,7 +29,11 @@ namespace NetTunnel.Core
 
         private const int _signLength = 32;
 
-        public UdpTunnelServer(ILogger<UdpTunnelServer> logger, ILoggerFactory sessionLoggerFactory, IPEndPoint listenerEndpoint, int targetLocalPort, string preSharedKey)
+        public UdpTunnelServer(ILogger<UdpTunnelServer> logger,
+            ILoggerFactory sessionLoggerFactory,
+            IPEndPoint listenerEndpoint,
+            int targetLocalPort, string preSharedKey,
+            TimeSpan sessionTimeout)
         {
             _logger = logger;
             _sessionLoggerFactory = sessionLoggerFactory;
@@ -35,6 +41,9 @@ namespace NetTunnel.Core
             _preSharedKey = Encoding.UTF8.GetBytes(preSharedKey);
             _hmac = new HMACSHA256(_preSharedKey);
             _targetEndpoint = new IPEndPoint(IPAddress.Loopback, targetLocalPort);
+            _sessionTimeout = sessionTimeout;
+            _cleanupTimer = new Timer(CleanupSessions, null,
+                TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
         }
 
         public Task StartAsync(CancellationToken cancellationToken = default)
@@ -87,6 +96,7 @@ namespace NetTunnel.Core
                 _cts?.Dispose();
                 _hmac?.Dispose();
                 _listenerClient?.Dispose();
+                _cleanupTimer.Dispose();
 
                 foreach (var session in _sessions.Values)
                 {
@@ -166,6 +176,35 @@ namespace NetTunnel.Core
             }
 
             _logger.LogInformation("Stop processing requests packets");
+        }
+
+        private void CleanupSessions(object? state)
+        {
+            try
+            {
+                var cutoff = DateTime.UtcNow - _sessionTimeout;
+                var removedCount = 0;
+
+                foreach (var key in _sessions.Keys.ToArray())
+                {
+                    if (_sessions.TryGetValue(key, out var session) &&
+                        session.LastActivity < cutoff &&
+                        _sessions.TryRemove(key, out var removedSession))
+                    {
+                        removedSession.Dispose();
+                        ++removedCount;
+                    }
+                }
+
+                if (removedCount > 0)
+                {
+                    _logger.LogInformation("Removed {InactiveSessionsCount} inactive sessions", removedCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Session cleanup error");
+            }
         }
     }
 }
