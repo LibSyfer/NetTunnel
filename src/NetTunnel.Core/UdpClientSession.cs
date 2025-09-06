@@ -17,6 +17,8 @@ namespace NetTunnel.Core
 
         private const int _signLength = 32;
 
+        public DateTime LastActivity { get; private set; } = DateTime.UtcNow;
+
         public UdpClientSession(ILogger logger, HMACSHA256 hmac, UdpClient replyClient, IPEndPoint replyEndpoint)
         {
             _logger = logger;
@@ -33,6 +35,8 @@ namespace NetTunnel.Core
         {
             _logger.LogDebug("Send {DatagramLength}bytes to {TargerEndpoint}", datagram.Length, targetEndPoint);
             await _targetClient.SendAsync(datagram, targetEndPoint, cancellationToken);
+
+            LastActivity = DateTime.UtcNow;
         }
 
         public void Dispose()
@@ -51,6 +55,8 @@ namespace NetTunnel.Core
                     var result = await _targetClient.ReceiveAsync(cancellationToken);
                     var packet = result.Buffer;
                     var packetLength = result.Buffer.Length;
+
+                    LastActivity = DateTime.UtcNow;
 
                     _logger.LogDebug("Receive {DatagramLength}bytes from {TargerEndpoint}", packetLength, result.RemoteEndPoint);
 
