@@ -98,6 +98,8 @@ namespace NetTunnel.Core
             {
                 if (_isDisposed) return;
                 _isDisposed = true;
+
+                _cts?.Cancel();
                 _cts?.Dispose();
                 _hmac?.Dispose();
                 _listenerClient?.Dispose();
@@ -187,40 +189,40 @@ namespace NetTunnel.Core
             _logger.LogInformation("Start session cleanup");
 
             while (!cancellationToken.IsCancellationRequested)
-        {
-            try
             {
+                try
+                {
                     await Task.Delay(_cleanupDelay, cancellationToken);
 
-                var cutoff = DateTime.UtcNow - _sessionTimeout;
-                var removedCount = 0;
+                    var cutoff = DateTime.UtcNow - _sessionTimeout;
+                    var removedCount = 0;
 
-                foreach (var key in _sessions.Keys.ToArray())
-                {
+                    foreach (var key in _sessions.Keys.ToArray())
+                    {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                    if (_sessions.TryGetValue(key, out var session) &&
-                        session.LastActivity < cutoff &&
-                        _sessions.TryRemove(key, out var removedSession))
-                    {
-                        removedSession.Dispose();
-                        ++removedCount;
+                        if (_sessions.TryGetValue(key, out var session) &&
+                            session.LastActivity < cutoff &&
+                            _sessions.TryRemove(key, out var removedSession))
+                        {
+                            removedSession.Dispose();
+                            ++removedCount;
+                        }
                     }
-                }
 
-                if (removedCount > 0)
-                {
-                    _logger.LogInformation("Removed {InactiveSessionsCount} inactive sessions", removedCount);
-                }
+                    if (removedCount > 0)
+                    {
+                        _logger.LogInformation("Removed {InactiveSessionsCount} inactive sessions", removedCount);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
                     break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Session cleanup error");
-            }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Session cleanup error");
+                }
             }
 
             _logger.LogInformation("Stop session cleanup");
