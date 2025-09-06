@@ -80,6 +80,10 @@ namespace NetTunnel.Core
                         ArrayPool<byte>.Shared.Return(tunnelPacketBuffer);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Reply receiving error: {ErrorMessage}", ex.Message);
