@@ -24,10 +24,12 @@ internal class Program
             new IPEndPoint(IPAddress.Loopback, 5555), testKey);
 
         using var server = new UdpTunnelServer(tunnelServer, loggerFactory,
-            new IPEndPoint(IPAddress.Loopback, 5555), 8090, testKey);
+            new IPEndPoint(IPAddress.Loopback, 5555), 8090, testKey,
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(10));
 
         using var udpSender = new UdpSender(udpSenderLogger,
-            new IPEndPoint(IPAddress.Loopback, 8080), TimeSpan.FromSeconds(10));
+            new IPEndPoint(IPAddress.Loopback, 8080), TimeSpan.FromSeconds(20));
 
         using var udpReceiver = new UdpReceiver(udpReceiverLogger,
             new IPEndPoint(IPAddress.Loopback, 8090));
