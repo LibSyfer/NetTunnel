@@ -28,7 +28,7 @@ namespace NetTunnel.Core
             _replyEndpoint = replyEndpoint;
             _cts = new CancellationTokenSource();
 
-            _ = ProcessSessionReplies(_cts.Token);
+             _ = ProcessSessionReplies(_cts.Token);
         }
 
         public async Task SendAsync(ReadOnlyMemory<byte> datagram, IPEndPoint targetEndPoint, CancellationToken  cancellationToken)
@@ -87,6 +87,7 @@ namespace NetTunnel.Core
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Reply receiving error: {ErrorMessage}", ex.Message);
+                    await Task.Delay(1000, cancellationToken);
                 }
             }
         }
