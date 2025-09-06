@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace NetTunnel.Test
@@ -11,6 +10,7 @@ namespace NetTunnel.Test
         private readonly ILogger<UdpSender> _logger;
         private readonly UdpClient _client;
         private readonly IPEndPoint _targetEndpoint;
+        private readonly TimeSpan _sendingDelay;
 
         private Task? _processingRequestsTask, _processingRepliesTask;
 
@@ -19,11 +19,12 @@ namespace NetTunnel.Test
         private bool _isDisposed = false;
         private object _lock = new object();
 
-        public UdpSender(ILogger<UdpSender> logger, IPEndPoint targetEndpoint)
+        public UdpSender(ILogger<UdpSender> logger, IPEndPoint targetEndpoint, TimeSpan sendingDelay)
         {
             _logger = logger;
             _client = new UdpClient(0);
             _targetEndpoint = targetEndpoint;
+            _sendingDelay = sendingDelay;
         }
 
         public Task StartAsync(CancellationToken cancellationToken = default)
@@ -91,10 +92,13 @@ namespace NetTunnel.Test
 
                     var data = Encoding.UTF8.GetBytes(message + $" {index}");
 
-                    _logger.LogInformation("Send {DataLength}bytes to {TargetEndpoint}", data.Length, _targetEndpoint);
+                    ++index;
+
+                    _logger.LogInformation($"Request message: {Encoding.UTF8.GetString(data)}");
+
                     await _client.SendAsync(new ReadOnlyMemory<byte>(data), _targetEndpoint, cancellationToken);
 
-                    await Task.Delay(5000, cancellationToken);
+                    await Task.Delay(_sendingDelay, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
