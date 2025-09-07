@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{36D591C7-65C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Test", "src\NetTunnel.Test\NetTunnel.Test.csproj", "{1FB18297-7611-456F-9A3D-B662D4017B91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Client", "src\NetTunnel.Client\NetTunnel.Client.csproj", "{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{1FB18297-7611-456F-9A3D-B662D4017B91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FB18297-7611-456F-9A3D-B662D4017B91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FB18297-7611-456F-9A3D-B662D4017B91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,6 +36,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1F4476FC-EF4C-4567-B2F2-85954B898530} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{1FB18297-7611-456F-9A3D-B662D4017B91} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {094E2348-EC24-4C85-A529-DE5554066839}
