@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Client", "src\Net
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Server", "src\NetTunnel.Server\NetTunnel.Server.csproj", "{60F43515-1755-4D08-92DD-9E44306DF804}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.UdpTrafficGenerator", "src\NetTunnel.UdpTrafficGenerator\NetTunnel.UdpTrafficGenerator.csproj", "{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.UdpEchoServer", "src\NetTunnel.UdpEchoServer\NetTunnel.UdpEchoServer.csproj", "{BA142292-F08D-48A3-9D6B-1B08D0E79635}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +39,14 @@ Global
 		{60F43515-1755-4D08-92DD-9E44306DF804}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60F43515-1755-4D08-92DD-9E44306DF804}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60F43515-1755-4D08-92DD-9E44306DF804}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA142292-F08D-48A3-9D6B-1B08D0E79635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA142292-F08D-48A3-9D6B-1B08D0E79635}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA142292-F08D-48A3-9D6B-1B08D0E79635}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA142292-F08D-48A3-9D6B-1B08D0E79635}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +56,8 @@ Global
 		{1FB18297-7611-456F-9A3D-B662D4017B91} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{60F43515-1755-4D08-92DD-9E44306DF804} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{95FEA6BD-9BD7-4EF9-8155-ABA9ECFEBCC9} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{BA142292-F08D-48A3-9D6B-1B08D0E79635} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {094E2348-EC24-4C85-A529-DE5554066839}
