@@ -114,7 +114,7 @@ namespace NetTunnel.Core
 
         private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Start processing requests packets");
+            _logger.LogInformation("Start processing requests packets on {ListenEndpoint}", _listenerClient.Client.LocalEndPoint);
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
