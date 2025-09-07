@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Test", "src\NetTu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Client", "src\NetTunnel.Client\NetTunnel.Client.csproj", "{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Server", "src\NetTunnel.Server\NetTunnel.Server.csproj", "{60F43515-1755-4D08-92DD-9E44306DF804}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60F43515-1755-4D08-92DD-9E44306DF804}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60F43515-1755-4D08-92DD-9E44306DF804}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60F43515-1755-4D08-92DD-9E44306DF804}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60F43515-1755-4D08-92DD-9E44306DF804}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -37,6 +43,7 @@ Global
 		{1F4476FC-EF4C-4567-B2F2-85954B898530} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{1FB18297-7611-456F-9A3D-B662D4017B91} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{60F43515-1755-4D08-92DD-9E44306DF804} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {094E2348-EC24-4C85-A529-DE5554066839}
