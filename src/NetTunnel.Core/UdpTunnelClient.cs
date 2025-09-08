@@ -34,10 +34,10 @@ namespace NetTunnel.Core
             private set { lock(_sourceEndpointLock) { _sourceEndpoint = value; } }
         }
 
-        public UdpTunnelClient(ILogger<UdpTunnelClient> logger, int listenerLocalPort, IPEndPoint serverEndpoint, string preSharedKey)
+        public UdpTunnelClient(ILogger<UdpTunnelClient> logger, IPEndPoint listenEndpoint, IPEndPoint serverEndpoint, string preSharedKey)
         {
             _logger = logger;
-            _listenerClient = new UdpClient(new IPEndPoint(IPAddress.Loopback, listenerLocalPort));
+            _listenerClient = new UdpClient(listenEndpoint);
             _forwardClient = new UdpClient(0);
             _preSharedKey = Encoding.UTF8.GetBytes(preSharedKey);
             _hmac = new HMACSHA256(_preSharedKey);

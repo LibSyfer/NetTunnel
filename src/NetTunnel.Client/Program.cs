@@ -13,7 +13,8 @@ builder.Services.AddSingleton(sp =>
 
     var ip = clientSettings.GetServerIp;
 
-    return new UdpTunnelClient(logger, clientSettings.ListenPort,
+    return new UdpTunnelClient(logger,
+        new IPEndPoint(clientSettings.GetListenIp, clientSettings.ListenPort),
         new IPEndPoint(clientSettings.GetServerIp, clientSettings.ServerPort),
         clientSettings.PreSharedKey);
 });
