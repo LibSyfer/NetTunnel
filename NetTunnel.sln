@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Core", "src\NetTu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Test", "src\NetTunnel.Test\NetTunnel.Test.csproj", "{1FB18297-7611-456F-9A3D-B662D4017B91}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Client", "src\NetTunnel.Client\NetTunnel.Client.csproj", "{41E8B0D7-19A9-47F9-ABAB-3352C2AB1FB8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Server", "src\NetTunnel.Server\NetTunnel.Server.csproj", "{60F43515-1755-4D08-92DD-9E44306DF804}"
