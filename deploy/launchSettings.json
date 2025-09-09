@@ -1,0 +1,32 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "nettunnel.client": "StartDebugging",
+        "nettunnel.udptrafficgenerator": "StartDebugging",
+        "nettunnel.server": "StartDebugging",
+        "nettunnel.udpechoserver": "StartDebugging"
+      }
+    },
+    "Client-Test": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeProfile": {
+        "includes": [
+          "client"
+        ]
+      }
+    },
+    "Server-Test": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeProfile": {
+        "includes": [
+          "server"
+        ]
+      }
+    }
+  }
+}

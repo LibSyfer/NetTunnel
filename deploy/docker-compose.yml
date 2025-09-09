@@ -1,0 +1,50 @@
+services:
+  nettunnel.udptrafficgenerator:
+    image: ${DOCKER_REGISTRY-}nettunneludptrafficgenerator
+    profiles: [client]
+    build:
+      context: ..
+      dockerfile: src/NetTunnel.UdpTrafficGenerator/Dockerfile
+    networks:
+      net-tunnel-network:
+        ipv4_address: 10.0.0.2
+
+
+  nettunnel.client:
+    image: ${DOCKER_REGISTRY-}nettunnelclient
+    profiles: [client]
+    build:
+      context: ..
+      dockerfile: src/NetTunnel.Client/Dockerfile
+    networks:
+      net-tunnel-network:
+        ipv4_address: 10.0.0.3
+
+
+  nettunnel.server:
+    image: ${DOCKER_REGISTRY-}nettunnelserver
+    profiles: [server]
+    build:
+      context: ..
+      dockerfile: src/NetTunnel.Server/Dockerfile
+    networks:
+      net-tunnel-network:
+        ipv4_address: 10.0.0.4
+
+
+  nettunnel.udpechoserver:
+    image: ${DOCKER_REGISTRY-}nettunneludpechoserver
+    profiles: [server]
+    build:
+      context: ..
+      dockerfile: src/NetTunnel.UdpEchoServer/Dockerfile
+    networks:
+      net-tunnel-network:
+        ipv4_address: 10.0.0.5
+
+networks:
+  net-tunnel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/29

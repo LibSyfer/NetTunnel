@@ -1,0 +1,36 @@
+services:
+  nettunnel.udptrafficgenerator:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      TraficGeneratorSettings__TargetIp: 10.0.0.3
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.client:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      Logging__LogLevel__NetTunnel.Core.UdpTunnelClient: Debug
+      ClientSettings__ServerIp: 10.0.0.4
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.server:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      Logging__LogLevel__NetTunnel.Core.UdpTunnelServer: Debug
+      ServerSettings__TargetIp: 10.0.0.5
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.udpechoserver:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
