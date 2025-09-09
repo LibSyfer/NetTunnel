@@ -34,7 +34,8 @@ namespace NetTunnel.Core
         public UdpTunnelServer(ILogger<UdpTunnelServer> logger,
             ILoggerFactory sessionLoggerFactory,
             IPEndPoint listenerEndpoint,
-            int targetLocalPort, string preSharedKey,
+            IPEndPoint targetEndpoint,
+            string preSharedKey,
             TimeSpan sessionTimeout,
             TimeSpan cleanupDelay)
         {
@@ -43,7 +44,7 @@ namespace NetTunnel.Core
             _listenerClient = new UdpClient(listenerEndpoint);
             _preSharedKey = Encoding.UTF8.GetBytes(preSharedKey);
             _hmac = new HMACSHA256(_preSharedKey);
-            _targetEndpoint = new IPEndPoint(IPAddress.Loopback, targetLocalPort);
+            _targetEndpoint = targetEndpoint;
             _sessionTimeout = sessionTimeout;
             _cleanupDelay = cleanupDelay;
         }

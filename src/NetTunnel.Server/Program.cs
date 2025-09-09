@@ -14,7 +14,7 @@ builder.Services.AddSingleton(sp =>
 
     return new UdpTunnelServer(logger, loggerFactory,
         new IPEndPoint(serverSettings.GetListenIp, serverSettings.ListenPort),
-        serverSettings.TargetPort,
+        new IPEndPoint(serverSettings.GetTargetIp, serverSettings.TargetPort),
         serverSettings.PreSharedKey,
         TimeSpan.FromMinutes(10),
         TimeSpan.FromMinutes(1));
