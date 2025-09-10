@@ -2,7 +2,6 @@
 using NetTunnel.Domain.Entities;
 using NetTunnel.Domain.Interfaces;
 using System.Net;
-using System.Net.Sockets;
 
 namespace NetTunnel.Infrastucture
 {
@@ -14,9 +13,13 @@ namespace NetTunnel.Infrastucture
         private readonly IDataSigner _replySigner;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
-        private readonly UdpClient _listenClient;
-        private readonly UdpClient _forwardClient;
+        private readonly IExternalTransportClient _externalClient;
+        private readonly ITunnelTransportClient _tunnelClient;
+
         private readonly IPEndPoint _serverEndpoint;
+
+        private IPEndPoint? _externalEndpoint;
+        private object _externalEndpointLock = new();
 
         private Task? _processingListeningPacketsTask;
         private Task? _processingReplyingPacketsTask;
@@ -30,6 +33,8 @@ namespace NetTunnel.Infrastucture
             IDataObfuscator obfuscator,
             IDataSigner tunnelSigner, IDataSigner replySigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
+            IExternalTransportClient externalClient,
+            ITunnelTransportClient tunnelClient,
             IPEndPoint listenEndpoint,
             IPEndPoint serverEndpoint)
         {
@@ -39,9 +44,28 @@ namespace NetTunnel.Infrastucture
             _replySigner = replySigner;
             _packetBuilder = packetBuilder;
 
-            _listenClient = new UdpClient(listenEndpoint);
-            _forwardClient = new UdpClient(0);
+            _externalClient = externalClient;
+            _tunnelClient = tunnelClient;
+
             _serverEndpoint = serverEndpoint;
+        }
+
+        private IPEndPoint? ExternalEndpoint
+        {
+            get
+            {
+                lock (_externalEndpointLock)
+                {
+                    return _externalEndpoint;
+                }
+            }
+            set
+            {
+                lock (_externalEndpointLock)
+                {
+                    _externalEndpoint = value;
+                }
+            }
         }
 
         public Task StartAsync(CancellationToken cancellationToken = default)
@@ -58,8 +82,8 @@ namespace NetTunnel.Infrastucture
 
             try
             {
-                _processingListeningPacketsTask = ProcessListeningPacketsAsync(_cts.Token);
-                _processingReplyingPacketsTask = ProcessReplyingPacketsAsync(_cts.Token);
+                _processingListeningPacketsTask = ProcessExternalDataAsync(_cts.Token);
+                _processingReplyingPacketsTask = ProcessTunnelDataAsync(_cts.Token);
             }
             catch (Exception ex)
             {
@@ -98,26 +122,29 @@ namespace NetTunnel.Infrastucture
                 _cts?.Cancel();
                 _cts?.Dispose();
 
-                _listenClient.Close();
-                _forwardClient.Close();
-                _listenClient.Dispose();
-                _forwardClient.Dispose();
+                _externalClient.Dispose();
+                _tunnelClient.Dispose();
             }
         }
 
-        private async Task ProcessListeningPacketsAsync(CancellationToken cancellationToken)
+        private async Task ProcessExternalDataAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Start processing listening packets on {ListenEndpoint}", _listenClient.Client.LocalEndPoint);
+            _logger.LogInformation("Start processing external data on {ListenEndpoint}", _externalClient.EndPoint);
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var receiveResult = await _listenClient.ReceiveAsync(cancellationToken);
-                    var packet = receiveResult.Buffer;
-                    var packetLength = receiveResult.Buffer.Length;
+                    var result = await _externalClient.ReceiveAsync(cancellationToken);
+                    var data = result.Data;
+                    var remoteEndpoint = result.RemoteEndPoint;
 
-                    var obfuscatePacket = _obfuscator.Obfuscate(packet);
+                    if (remoteEndpoint != null && !remoteEndpoint.Equals(ExternalEndpoint))
+                    {
+                        ExternalEndpoint = remoteEndpoint;
+                    }
+
+                    var obfuscatePacket = _obfuscator.Obfuscate(data);
                     var sign = _tunnelSigner.CreateSignature(obfuscatePacket);
 
                     var tunnelPacket = new DefaultTunnelPacket
@@ -128,8 +155,8 @@ namespace NetTunnel.Infrastucture
 
                     var tunnelRawData = _packetBuilder.BuildPacket(tunnelPacket);
 
-                    await _forwardClient.SendAsync(
-                        datagram: tunnelRawData.AsMemory(),
+                    await _tunnelClient.SendAsync(
+                        data: tunnelRawData,
                         endPoint: _serverEndpoint,
                         cancellationToken: cancellationToken);
                 }
@@ -139,37 +166,37 @@ namespace NetTunnel.Infrastucture
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Processing listening packets error: {ex.Message}");
+                    _logger.LogError(ex, $"Processing external data error: {ex.Message}");
                     await Task.Delay(1000);
                 }
             }
 
-            _logger.LogInformation("Stop processing listening packets");
+            _logger.LogInformation("Stop processing external data");
         }
 
-        private async Task ProcessReplyingPacketsAsync(CancellationToken cancellationToken)
+        private async Task ProcessTunnelDataAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Start processing replying packets on {ListenEndpoint}", _listenClient.Client.LocalEndPoint);
+            _logger.LogInformation("Start processing tunnel data on {ListenEndpoint}", _tunnelClient.EndPoint);
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var receiveResult = await _listenClient.ReceiveAsync(cancellationToken);
-                    var tunnelRawData = receiveResult.Buffer;
+                    var result = await _tunnelClient.ReceiveAsync(cancellationToken);
+                    var data = result.Data;
 
-                    var tunnelPacket = _packetBuilder.ParsePacket(tunnelRawData);
+                    var tunnelPacket = _packetBuilder.ParsePacket(data);
 
                     if (!_replySigner.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
                     {
-                        _logger.LogWarning("Replying packet has wrong signature");
+                        _logger.LogWarning("Tunnel data has wrong signature");
                         continue;
                     }
 
                     var deobfuscatePacket = _obfuscator.Deobfuscate(tunnelPacket.Data);
 
-                    await _listenClient.SendAsync(
-                        datagram: deobfuscatePacket.AsMemory(), 
+                    await _externalClient.SendAsync(
+                        data: deobfuscatePacket, 
                         endPoint: _serverEndpoint,
                         cancellationToken: cancellationToken);
                 }
@@ -179,12 +206,12 @@ namespace NetTunnel.Infrastucture
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Processing replying packets error: {ex.Message}");
+                    _logger.LogError(ex, $"Processing tunnel data error: {ex.Message}");
                     await Task.Delay(1000);
                 }
             }
 
-            _logger.LogInformation("Stop processing replying packets");
+            _logger.LogInformation("Stop processing tunnel data");
         }
     }
 }
