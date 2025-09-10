@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NetTunnel.Domain.Entities;
 using NetTunnel.Domain.Interfaces;
 using System.Net;
 using System.Net.Sockets;
@@ -108,7 +109,25 @@ namespace NetTunnel.Infrastucture
             {
                 try
                 {
+                    var receiveResult = await _listenClient.ReceiveAsync(cancellationToken);
+                    var packet = receiveResult.Buffer;
+                    var packetLength = receiveResult.Buffer.Length;
 
+                    var obfuscatePacket = _obfuscator.Obfuscate(packet);
+                    var sign = _signer.CreateSignature(obfuscatePacket);
+
+                    var tunnelPacket = new DefaultTunnelPacket
+                    {
+                        Data = obfuscatePacket,
+                        Sign = sign,
+                    };
+
+                    var tunnelRawData = _packetBuilder.BuildPacket(tunnelPacket);
+
+                    await _forwardClient.SendAsync(
+                        datagram: tunnelRawData.AsMemory(),
+                        endPoint: _serverEndpoint,
+                        cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -132,7 +151,23 @@ namespace NetTunnel.Infrastucture
             {
                 try
                 {
+                    var receiveResult = await _listenClient.ReceiveAsync(cancellationToken);
+                    var tunnelRawData = receiveResult.Buffer;
 
+                    var tunnelPacket = _packetBuilder.ParsePacket(tunnelRawData);
+
+                    if (!_signer.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
+                    {
+                        _logger.LogWarning("Replying packet has wrong signature");
+                        continue;
+                    }
+
+                    var deobfuscatePacket = _obfuscator.Deobfuscate(tunnelPacket.Data);
+
+                    await _listenClient.SendAsync(
+                        datagram: deobfuscatePacket.AsMemory(), 
+                        endPoint: _serverEndpoint,
+                        cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
