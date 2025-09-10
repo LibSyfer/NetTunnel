@@ -94,6 +94,8 @@ namespace NetTunnel.Infrastucture
                 _disposed = true;
 
                 _cts?.Cancel();
+                _cts?.Dispose();
+
                 _listenClient.Close();
                 _forwardClient.Close();
                 _listenClient.Dispose();
