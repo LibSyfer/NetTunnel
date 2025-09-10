@@ -15,6 +15,9 @@ namespace NetTunnel.Infrastucture
         private readonly UdpClient _forwardClient;
         private readonly IPEndPoint _serverEndpoint;
 
+        private Task? _processingListeningPacketsTask;
+        private Task? _processingReplyingPacketsTask;
+
         private CancellationTokenSource? _cts;
         private bool _isRunning = false;
         private bool _disposed = false;
@@ -49,7 +52,8 @@ namespace NetTunnel.Infrastucture
 
             try
             {
-                // start handling
+                _processingListeningPacketsTask = ProcessListeningPacketsAsync(_cts.Token);
+                _processingReplyingPacketsTask = ProcessReplyingPacketsAsync(_cts.Token);
             }
             catch (Exception ex)
             {
@@ -71,7 +75,9 @@ namespace NetTunnel.Infrastucture
                 _cts?.Cancel();
             }
 
-            await Task.WhenAll();
+            await Task.WhenAll(
+                _processingListeningPacketsTask ?? Task.CompletedTask,
+                _processingReplyingPacketsTask ?? Task.CompletedTask);
         }
 
         public void Dispose()
@@ -89,6 +95,54 @@ namespace NetTunnel.Infrastucture
                 _listenClient.Dispose();
                 _forwardClient.Dispose();
             }
+        }
+
+        private async Task ProcessListeningPacketsAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Start processing listening packets on {ListenEndpoint}", _listenClient.Client.LocalEndPoint);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Processing listening packets error: {ex.Message}");
+                    await Task.Delay(1000);
+                }
+            }
+
+            _logger.LogInformation("Stop processing listening packets");
+        }
+
+        private async Task ProcessReplyingPacketsAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Start processing replying packets on {ListenEndpoint}", _listenClient.Client.LocalEndPoint);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Processing replying packets error: {ex.Message}");
+                    await Task.Delay(1000);
+                }
+            }
+
+            _logger.LogInformation("Stop processing replying packets");
         }
     }
 }
