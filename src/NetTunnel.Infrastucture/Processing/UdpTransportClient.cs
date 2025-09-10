@@ -4,7 +4,7 @@ using NetTunnel.Domain.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
-namespace NetTunnel.Infrastucture
+namespace NetTunnel.Infrastucture.Processing
 {
     public class UdpTransportClient : ITransportClient
     {

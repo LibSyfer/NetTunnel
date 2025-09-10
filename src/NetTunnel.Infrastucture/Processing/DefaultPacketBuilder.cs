@@ -1,7 +1,7 @@
 ﻿using NetTunnel.Domain.Entities;
 using NetTunnel.Domain.Interfaces;
 
-namespace NetTunnel.Infrastucture
+namespace NetTunnel.Infrastucture.Processing
 {
     public class DefaultPacketBuilder : ITunnelPacketBuilder<DefaultTunnelPacket>
     {
