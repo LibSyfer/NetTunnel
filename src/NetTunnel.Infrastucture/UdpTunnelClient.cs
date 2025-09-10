@@ -10,6 +10,7 @@ namespace NetTunnel.Infrastucture
         private readonly ILogger<UdpTunnelClient> _logger;
         private readonly IDataObfuscator _obfuscator;
         private readonly IDataSigner _signer;
+        private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
         private readonly UdpClient _listenClient;
         private readonly UdpClient _forwardClient;
@@ -26,12 +27,14 @@ namespace NetTunnel.Infrastucture
         public UdpTunnelClient(ILogger<UdpTunnelClient> logger,
             IDataObfuscator obfuscator,
             IDataSigner signer,
+            ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             IPEndPoint listenEndpoint,
             IPEndPoint serverEndpoint)
         {
             _logger = logger;
             _obfuscator = obfuscator;
             _signer = signer;
+            _packetBuilder = packetBuilder;
 
             _listenClient = new UdpClient(listenEndpoint);
             _forwardClient = new UdpClient(0);
