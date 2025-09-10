@@ -10,7 +10,8 @@ namespace NetTunnel.Infrastucture
     {
         private readonly ILogger<UdpTunnelClient> _logger;
         private readonly IDataObfuscator _obfuscator;
-        private readonly IDataSigner _signer;
+        private readonly IDataSigner _tunnelSigner;
+        private readonly IDataSigner _replySigner;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
         private readonly UdpClient _listenClient;
@@ -27,14 +28,15 @@ namespace NetTunnel.Infrastucture
 
         public UdpTunnelClient(ILogger<UdpTunnelClient> logger,
             IDataObfuscator obfuscator,
-            IDataSigner signer,
+            IDataSigner tunnelSigner, IDataSigner replySigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             IPEndPoint listenEndpoint,
             IPEndPoint serverEndpoint)
         {
             _logger = logger;
             _obfuscator = obfuscator;
-            _signer = signer;
+            _tunnelSigner = tunnelSigner;
+            _replySigner = replySigner;
             _packetBuilder = packetBuilder;
 
             _listenClient = new UdpClient(listenEndpoint);
@@ -116,7 +118,7 @@ namespace NetTunnel.Infrastucture
                     var packetLength = receiveResult.Buffer.Length;
 
                     var obfuscatePacket = _obfuscator.Obfuscate(packet);
-                    var sign = _signer.CreateSignature(obfuscatePacket);
+                    var sign = _tunnelSigner.CreateSignature(obfuscatePacket);
 
                     var tunnelPacket = new DefaultTunnelPacket
                     {
@@ -158,7 +160,7 @@ namespace NetTunnel.Infrastucture
 
                     var tunnelPacket = _packetBuilder.ParsePacket(tunnelRawData);
 
-                    if (!_signer.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
+                    if (!_replySigner.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
                     {
                         _logger.LogWarning("Replying packet has wrong signature");
                         continue;
