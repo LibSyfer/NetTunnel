@@ -3,6 +3,6 @@
     public interface ITunnelPacketBuilder<TPacket> where TPacket : class
     {
         byte[] BuildPacket(TPacket packet);
-        TPacket ParsePacket(byte[] data);
+        TPacket ParsePacket(byte[] rawData);
     }
 }
