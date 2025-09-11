@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace NetTunnel.Domain.Entities
+namespace NetTunnel.Application.Entities
 {
     public struct TransportClientResult
     {

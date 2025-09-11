@@ -1,4 +1,4 @@
-﻿namespace NetTunnel.Domain.Entities
+﻿namespace NetTunnel.Application.Entities
 {
     public class DefaultTunnelPacket
     {

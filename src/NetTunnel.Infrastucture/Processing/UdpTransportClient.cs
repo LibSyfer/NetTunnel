@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using NetTunnel.Domain.Entities;
-using NetTunnel.Domain.Interfaces;
+using NetTunnel.Application.Entities;
+using NetTunnel.Application.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 

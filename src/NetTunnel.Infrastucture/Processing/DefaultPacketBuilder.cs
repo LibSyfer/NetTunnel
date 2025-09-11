@@ -1,5 +1,5 @@
-﻿using NetTunnel.Domain.Entities;
-using NetTunnel.Domain.Interfaces;
+﻿using NetTunnel.Application.Entities;
+using NetTunnel.Application.Interfaces;
 
 namespace NetTunnel.Infrastucture.Processing
 {

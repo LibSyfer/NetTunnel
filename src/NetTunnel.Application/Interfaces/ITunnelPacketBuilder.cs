@@ -1,4 +1,4 @@
-﻿namespace NetTunnel.Domain.Interfaces
+﻿namespace NetTunnel.Application.Interfaces
 {
     public interface ITunnelPacketBuilder<TPacket> where TPacket : class
     {

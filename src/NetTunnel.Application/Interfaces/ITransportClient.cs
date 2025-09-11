@@ -1,7 +1,7 @@
-﻿using NetTunnel.Domain.Entities;
+﻿using NetTunnel.Application.Entities;
 using System.Net;
 
-namespace NetTunnel.Domain.Interfaces
+namespace NetTunnel.Application.Interfaces
 {
     public interface ITransportClient : IDisposable
     {

@@ -1,51 +1,53 @@
 ﻿using Microsoft.Extensions.Logging;
-using NetTunnel.Domain.Entities;
+using NetTunnel.Application.Entities;
+using NetTunnel.Application.Interfaces;
 using NetTunnel.Domain.Interfaces;
 using System.Net;
 
 namespace NetTunnel.Infrastucture
 {
-    public class UdpTunnelClient : ITunnelNode, IDisposable
+    public class TunnelClient : ITunnelNode, IDisposable
     {
-        private readonly ILogger<UdpTunnelClient> _logger;
+        private readonly ILogger<TunnelClient> _logger;
         private readonly IDataObfuscator _obfuscator;
         private readonly IDataSigner _tunnelSigner;
-        private readonly IDataSigner _replySigner;
+        private readonly IDataSigner _externalSigner;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
-        private readonly IExternalTransportClient _externalClient;
         private readonly ITunnelTransportClient _tunnelClient;
+        private readonly IExternalTransportClient _externalClient;
 
         private readonly IPEndPoint _serverEndpoint;
 
         private IPEndPoint? _externalEndpoint;
         private object _externalEndpointLock = new();
 
-        private Task? _processingListeningPacketsTask;
-        private Task? _processingReplyingPacketsTask;
+        private Task? _processingExternalDataTask;
+        private Task? _processingTunnelDataTask;
 
         private CancellationTokenSource? _cts;
         private bool _isRunning = false;
         private bool _disposed = false;
         private object _rootLock = new();
 
-        public UdpTunnelClient(ILogger<UdpTunnelClient> logger,
+        public TunnelClient(ILogger<TunnelClient> logger,
             IDataObfuscator obfuscator,
-            IDataSigner tunnelSigner, IDataSigner replySigner,
+            IDataSigner tunnelSigner,
+            IDataSigner externalSigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
-            IExternalTransportClient externalClient,
             ITunnelTransportClient tunnelClient,
+            IExternalTransportClient externalClient,
             IPEndPoint listenEndpoint,
             IPEndPoint serverEndpoint)
         {
             _logger = logger;
             _obfuscator = obfuscator;
             _tunnelSigner = tunnelSigner;
-            _replySigner = replySigner;
+            _externalSigner = externalSigner;
             _packetBuilder = packetBuilder;
 
-            _externalClient = externalClient;
             _tunnelClient = tunnelClient;
+            _externalClient = externalClient;
 
             _serverEndpoint = serverEndpoint;
         }
@@ -82,8 +84,8 @@ namespace NetTunnel.Infrastucture
 
             try
             {
-                _processingListeningPacketsTask = ProcessExternalDataAsync(_cts.Token);
-                _processingReplyingPacketsTask = ProcessTunnelDataAsync(_cts.Token);
+                _processingExternalDataTask = ProcessExternalDataAsync(_cts.Token);
+                _processingTunnelDataTask = ProcessTunnelDataAsync(_cts.Token);
             }
             catch (Exception ex)
             {
@@ -106,8 +108,8 @@ namespace NetTunnel.Infrastucture
             }
 
             await Task.WhenAll(
-                _processingListeningPacketsTask ?? Task.CompletedTask,
-                _processingReplyingPacketsTask ?? Task.CompletedTask);
+                _processingExternalDataTask ?? Task.CompletedTask,
+                _processingTunnelDataTask ?? Task.CompletedTask);
         }
 
         public void Dispose()
@@ -187,7 +189,7 @@ namespace NetTunnel.Infrastucture
 
                     var tunnelPacket = _packetBuilder.ParsePacket(data);
 
-                    if (!_replySigner.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
+                    if (!_externalSigner.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
                     {
                         _logger.LogWarning("Tunnel data has wrong signature");
                         continue;
