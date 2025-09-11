@@ -10,4 +10,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetTunnel.Application\NetTunnel.Application.csproj" />
+    <ProjectReference Include="..\NetTunnel.Domain\NetTunnel.Domain.csproj" />
+    <ProjectReference Include="..\NetTunnel.Infrastucture\NetTunnel.Infrastucture.csproj" />
+  </ItemGroup>
 </Project>
