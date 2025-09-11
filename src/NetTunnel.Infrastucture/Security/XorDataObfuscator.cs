@@ -2,7 +2,7 @@
 
 namespace NetTunnel.Infrastucture.Security
 {
-    internal class XorDataObfuscator : IDataObfuscator
+    public class XorDataObfuscator : IDataObfuscator
     {
         private readonly byte[] _key;
 

@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace NetTunnel.Infrastucture.Security
 {
-    internal class HmacDataSigner : IDataSigner, IDisposable
+    public class HmacDataSigner : IDataSigner, IDisposable
     {
         private readonly HMAC _hmac;
 
