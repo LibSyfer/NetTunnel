@@ -6,7 +6,7 @@ using System.Net.Sockets;
 
 namespace NetTunnel.Infrastucture.Processing
 {
-    public class UdpTransportClient : ITransportClient
+    public class UdpTransportClient : IExternalTransportClient, ITunnelTransportClient
     {
         private readonly ILogger<UdpTransportClient> _logger;
         private readonly UdpClient _client;
