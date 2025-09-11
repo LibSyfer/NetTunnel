@@ -18,7 +18,6 @@ namespace NetTunnel.Infrastucture
         private readonly IExternalTransportClient _externalClient;
 
         private readonly IPEndPoint _serverEndpoint;
-
         private IPEndPoint? _externalEndpoint;
         private object _externalEndpointLock = new();
 
@@ -37,7 +36,6 @@ namespace NetTunnel.Infrastucture
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             ITunnelTransportClient tunnelClient,
             IExternalTransportClient externalClient,
-            IPEndPoint listenEndpoint,
             IPEndPoint serverEndpoint)
         {
             _logger = logger;
@@ -199,7 +197,7 @@ namespace NetTunnel.Infrastucture
 
                     await _externalClient.SendAsync(
                         data: deobfuscatePacket, 
-                        endPoint: _serverEndpoint,
+                        endPoint: ExternalEndpoint ?? throw new ArgumentNullException("Null external endpoint"),
                         cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
