@@ -40,6 +40,20 @@ namespace NetTunnel.Tests.Infrastructure.Security
             yield return new object[] { new byte[] { 0xFF }, new byte[] { 0x00 } }; // Edge values
         }
 
+        [Fact]
+        public void Constructor_WithNullKey_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new HmacDataSigner(HmacDataSigner.Algorithm.SHA1, null));
+        }
+
+        [Fact]
+        public void Constructor_WithEmptyKey_ThrowsArgumentException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new HmacDataSigner(HmacDataSigner.Algorithm.SHA1, Array.Empty<byte>()));
+        }
+
         [Theory]
         [MemberData(nameof(GetAlgorithms))]
         public void CreateSignature_WithValidData_ReturnsNonEmptySignature(HmacDataSigner.Algorithm algorithm)

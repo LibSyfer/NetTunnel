@@ -18,6 +18,9 @@ namespace NetTunnel.Infrastucture.Security
 
         public HmacDataSigner(Algorithm algorithm, byte[] key)
         {
+            if (key == null || key.Length == 0)
+                throw new ArgumentException("Key cannot be null or empty");
+
             _hmac = algorithm switch
             {
                 Algorithm.SHA256 => new HMACSHA256(key),
