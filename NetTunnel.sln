@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.TunnelServer", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{DE7083CD-67C9-4BD5-B952-0375C39733F3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{31AB5015-BD6D-4EFC-8F6C-9FC6A12E14E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTunnel.Tests", "tests\NetTunnel.Tests\NetTunnel.Tests.csproj", "{12FC2B39-7D16-4ECC-8970-A0518A45197D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +73,10 @@ Global
 		{36B21028-D9E3-4A82-9B19-3175F0738DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36B21028-D9E3-4A82-9B19-3175F0738DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36B21028-D9E3-4A82-9B19-3175F0738DEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12FC2B39-7D16-4ECC-8970-A0518A45197D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12FC2B39-7D16-4ECC-8970-A0518A45197D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12FC2B39-7D16-4ECC-8970-A0518A45197D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12FC2B39-7D16-4ECC-8970-A0518A45197D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +94,7 @@ Global
 		{A03F0EE8-53A8-433E-8372-4BDF6829A246} = {7F29258C-2458-4BCC-8AB6-D0570750E7A8}
 		{36B21028-D9E3-4A82-9B19-3175F0738DEA} = {7F29258C-2458-4BCC-8AB6-D0570750E7A8}
 		{DE7083CD-67C9-4BD5-B952-0375C39733F3} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{12FC2B39-7D16-4ECC-8970-A0518A45197D} = {31AB5015-BD6D-4EFC-8F6C-9FC6A12E14E4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {094E2348-EC24-4C85-A529-DE5554066839}
