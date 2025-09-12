@@ -8,7 +8,10 @@ namespace NetTunnel.Infrastucture.Security
 
         public XorDataObfuscator(byte[] key)
         {
-            _key = key ?? throw new ArgumentNullException(nameof(key));
+            if (key == null || key.Length == 0)
+                throw new ArgumentException("Key cannot be null or empty");
+
+            _key = key;
         }
 
         public byte[] Deobfuscate(byte[] data) => XorData(data);
