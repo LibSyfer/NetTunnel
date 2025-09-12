@@ -16,13 +16,11 @@ namespace NetTunnel.Infrastucture.Sessions
         private readonly IDataSigner _signer;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
         private readonly IPEndPoint _replyEndpoint;
+        private DateTime _lastActivity;
 
-        private Task? _processRepliesTask;
+        private CancellationTokenSource _cts;
 
-        private CancellationTokenSource? _cts;
-        private bool _isRunning = false;
-        private bool _disposed = false;
-        private object _rootLock = new();
+        public DateTime LastActivity => _lastActivity;
 
         public DefaultClientSession(ILogger logger,
             ITransportClient sessionClient,
@@ -39,65 +37,22 @@ namespace NetTunnel.Infrastucture.Sessions
             _signer = signer;
             _packetBuilder = packetBuilder;
             _replyEndpoint = replyEndpoint;
+
+            _cts = new CancellationTokenSource();
+            _ = ProcessAsync(_cts.Token);
         }
 
         public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint endPoint, CancellationToken cancellationToken)
         {
+            _lastActivity = DateTime.UtcNow;
             return await _sessionClient.SendAsync(data, endPoint, cancellationToken);
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken = default)
-        {
-            if (_isRunning || _disposed) return Task.CompletedTask;
-
-            lock (_rootLock)
-            {
-                if (_isRunning || _disposed) return Task.CompletedTask;
-                _isRunning = true;
-
-                _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            }
-
-            try
-            {
-                _processRepliesTask = ProcessAsync(_cts.Token);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Start error: {ex.Message}");
-            }
-
-            return Task.CompletedTask;
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken = default)
-        {
-            if (!_isRunning) return;
-
-            lock (_rootLock)
-            {
-                if (!_isRunning) return;
-                _isRunning = false;
-
-                _cts?.Cancel();
-            }
-
-            await (_processRepliesTask ?? Task.CompletedTask);
         }
 
         public void Dispose()
         {
-            if (_disposed) return;
-            
-            lock (_rootLock)
-            {
-                if (_disposed) return;
-                _disposed = true;
-
-                _cts?.Cancel();
-                _cts?.Dispose();
-                _sessionClient.Dispose();
-            }
+            _cts.Cancel();
+            _cts.Dispose();
+            _sessionClient.Dispose();
         }
 
         private async Task ProcessAsync(CancellationToken cancellationToken)
@@ -120,6 +75,7 @@ namespace NetTunnel.Infrastucture.Sessions
 
                     var tunnelRawData = _packetBuilder.BuildPacket(tunnelPacket);
 
+                    _lastActivity = DateTime.UtcNow;
                     await _replyClient.SendAsync(
                         data: tunnelRawData,
                         endPoint: _replyEndpoint,
