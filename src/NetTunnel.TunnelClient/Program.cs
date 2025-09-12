@@ -17,7 +17,7 @@ builder.Services.AddTransient<IDataSigner, HmacDataSigner>(sp =>
 {
     return new HmacDataSigner(HmacDataSigner.Algorithm.SHA256, Encoding.UTF8.GetBytes("secret"));
 });
-builder.Services.AddSingleton<ITunnelPacketBuilder<DefaultTunnelPacket>, DefaultPacketBuilder>();
+builder.Services.AddSingleton<ITunnelPacketBuilder<DefaultTunnelPacket>, StreamPacketBuilder>();
 builder.Services.AddTransient<ITunnelTransportClient>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
