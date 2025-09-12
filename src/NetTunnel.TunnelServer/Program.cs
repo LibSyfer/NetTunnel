@@ -1,9 +1,11 @@
 using NetTunnel.Application.Entities;
 using NetTunnel.Application.Interfaces;
+using NetTunnel.Application.Interfaces.Sessions;
 using NetTunnel.Domain.Interfaces;
 using NetTunnel.Infrastucture;
 using NetTunnel.Infrastucture.Processing;
 using NetTunnel.Infrastucture.Security;
+using NetTunnel.Infrastucture.Sessions;
 using NetTunnel.TunnelServer;
 using System.Net;
 using System.Text;
@@ -37,22 +39,23 @@ builder.Services.AddTransient<IExternalTransportClient>(sp =>
     return client;
 });
 
+builder.Services.AddSingleton<IClientSessionFactory, DefaultClientSessionFactory<UdpTransportClient>>();
+
 builder.Services.AddSingleton<ITunnelNode>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<TunnelServer>>();
     var obfuscator = sp.GetRequiredService<IDataObfuscator>();
     var tunnelSigner = sp.GetRequiredService<IDataSigner>();
-    var externalSigner = sp.GetRequiredService<IDataSigner>();
     var packerBuilder = sp.GetRequiredService<ITunnelPacketBuilder<DefaultTunnelPacket>>();
     var tunnelClient = sp.GetRequiredService<ITunnelTransportClient>();
-    var externalClient = sp.GetRequiredService<IExternalTransportClient>();
+    var sessionFactory = sp.GetRequiredService<IClientSessionFactory>();
 
     return new TunnelServer(logger,
         obfuscator,
         tunnelSigner,
-        externalSigner,
         packerBuilder,
         tunnelClient,
+        sessionFactory,
         new IPEndPoint(IPAddress.Loopback, 5555)
         );
 });

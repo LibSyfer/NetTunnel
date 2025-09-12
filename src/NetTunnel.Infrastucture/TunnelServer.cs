@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetTunnel.Application.Entities;
 using NetTunnel.Application.Interfaces;
+using NetTunnel.Application.Interfaces.Sessions;
 using NetTunnel.Domain.Interfaces;
+using NetTunnel.Infrastucture.Sessions;
+using System.Collections.Concurrent;
 using System.Net;
-using System.Text;
 
 namespace NetTunnel.Infrastucture
 {
@@ -12,10 +14,12 @@ namespace NetTunnel.Infrastucture
         private readonly ILogger<TunnelServer> _logger;
         private readonly IDataObfuscator _obfuscator;
         private readonly IDataSigner _tunnelSigner;
-        private readonly IDataSigner _externalSigner;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
         private readonly ITunnelTransportClient _tunnelClient;
+
+        private readonly IClientSessionFactory _sessionFactory;
+        private readonly ConcurrentDictionary<IPEndPoint, IClientSession> _sessions = new();
 
         private readonly IPEndPoint _targetEndpoint;
 
@@ -29,17 +33,17 @@ namespace NetTunnel.Infrastucture
         public TunnelServer(ILogger<TunnelServer> logger,
             IDataObfuscator obfuscator,
             IDataSigner tunnelSigner,
-            IDataSigner externalSigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             ITunnelTransportClient tunnelClient,
+            IClientSessionFactory sessionFactory,
             IPEndPoint targetEndpoint)
         {
             _logger = logger;
             _obfuscator = obfuscator;
             _tunnelSigner = tunnelSigner;
-            _externalSigner = externalSigner;
             _packetBuilder = packetBuilder;
             _tunnelClient = tunnelClient;
+            _sessionFactory = sessionFactory;
             _targetEndpoint = targetEndpoint;
         }
 
@@ -119,7 +123,18 @@ namespace NetTunnel.Infrastucture
 
                     var deobfuscatePacket = _obfuscator.Deobfuscate(tunnelPacket.Data);
 
-                    _logger.LogInformation("Receive {BytesLength} packet: {Data}", deobfuscatePacket.Length, Encoding.UTF8.GetString(deobfuscatePacket));
+                    var session = _sessions.GetOrAdd(result.RemoteEndPoint, remoteEndpoint =>
+                    {
+                        var newSession = _sessionFactory.CreateSession(_tunnelClient, remoteEndpoint);
+                        newSession.StartAsync(cancellationToken);
+
+                        return newSession;
+                    });
+
+                    await session.SendAsync(
+                        data: deobfuscatePacket,
+                        endPoint: _targetEndpoint,
+                        cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
