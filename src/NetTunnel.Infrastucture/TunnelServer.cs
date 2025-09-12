@@ -2,8 +2,8 @@
 using NetTunnel.Application.Entities;
 using NetTunnel.Application.Interfaces;
 using NetTunnel.Domain.Interfaces;
-using System.Collections.Concurrent;
 using System.Net;
+using System.Text;
 
 namespace NetTunnel.Infrastucture
 {
@@ -16,7 +16,6 @@ namespace NetTunnel.Infrastucture
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
         private readonly ITunnelTransportClient _tunnelClient;
-        private readonly IExternalClientSessionFactory _sessionsFactory;
 
         private readonly IPEndPoint _targetEndpoint;
 
@@ -27,15 +26,12 @@ namespace NetTunnel.Infrastucture
         private bool _disposed = false;
         private object _rootLock = new();
 
-        private ConcurrentDictionary<IPEndPoint, IExternalClientSession<DefaultTunnelPacket>> _sessions = new();
-
         public TunnelServer(ILogger<TunnelServer> logger,
             IDataObfuscator obfuscator,
             IDataSigner tunnelSigner,
             IDataSigner externalSigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             ITunnelTransportClient tunnelClient,
-            IExternalClientSessionFactory sessionsFactory,
             IPEndPoint targetEndpoint)
         {
             _logger = logger;
@@ -44,7 +40,6 @@ namespace NetTunnel.Infrastucture
             _externalSigner = externalSigner;
             _packetBuilder = packetBuilder;
             _tunnelClient = tunnelClient;
-            _sessionsFactory = sessionsFactory;
             _targetEndpoint = targetEndpoint;
         }
 
@@ -84,11 +79,6 @@ namespace NetTunnel.Infrastucture
                 _cts?.Cancel();
             }
 
-            foreach (var session in _sessions)
-            {
-                await session.Value.StopAsync(cancellationToken);
-            }
-
             await (_processingTunnelDataTask ?? Task.CompletedTask);
         }
 
@@ -105,11 +95,6 @@ namespace NetTunnel.Infrastucture
                 _cts?.Dispose();
 
                 _tunnelClient.Dispose();
-
-                foreach(var session in _sessions)
-                {
-                    session.Value.Dispose();
-                }
             }
         }
 
@@ -121,7 +106,20 @@ namespace NetTunnel.Infrastucture
             {
                 try
                 {
-                    await Task.Delay(5000, cancellationToken);
+                    var result = await _tunnelClient.ReceiveAsync(cancellationToken);
+                    var data = result.Data;
+
+                    var tunnelPacket = _packetBuilder.ParsePacket(data);
+
+                    if (!_tunnelSigner.VerifySignature(tunnelPacket.Data, tunnelPacket.Sign))
+                    {
+                        _logger.LogWarning("Tunnel data has wrong signature");
+                        continue;
+                    }
+
+                    var deobfuscatePacket = _obfuscator.Deobfuscate(tunnelPacket.Data);
+
+                    _logger.LogInformation("Receive {BytesLength} packet: {Data}", deobfuscatePacket.Length, Encoding.UTF8.GetString(deobfuscatePacket));
                 }
                 catch (OperationCanceledException)
                 {
