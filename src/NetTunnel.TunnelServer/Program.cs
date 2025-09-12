@@ -38,8 +38,7 @@ builder.Services.AddTransient<IExternalTransportClient>(sp =>
 
     return client;
 });
-
-builder.Services.AddSingleton<IClientSessionFactory, DefaultClientSessionFactory<UdpTransportClient>>();
+builder.Services.AddSingleton<IClientSessionManager, DefaultClientSessionManager>();
 
 builder.Services.AddSingleton<ITunnelNode>(sp =>
 {
@@ -48,14 +47,14 @@ builder.Services.AddSingleton<ITunnelNode>(sp =>
     var tunnelSigner = sp.GetRequiredService<IDataSigner>();
     var packerBuilder = sp.GetRequiredService<ITunnelPacketBuilder<DefaultTunnelPacket>>();
     var tunnelClient = sp.GetRequiredService<ITunnelTransportClient>();
-    var sessionFactory = sp.GetRequiredService<IClientSessionFactory>();
+    var sessionManager = sp.GetRequiredService<IClientSessionManager>();
 
     return new TunnelServer(logger,
         obfuscator,
         tunnelSigner,
         packerBuilder,
         tunnelClient,
-        sessionFactory,
+        sessionManager,
         new IPEndPoint(IPAddress.Loopback, 5555)
         );
 });

@@ -3,8 +3,6 @@ using NetTunnel.Application.Entities;
 using NetTunnel.Application.Interfaces;
 using NetTunnel.Application.Interfaces.Sessions;
 using NetTunnel.Domain.Interfaces;
-using NetTunnel.Infrastucture.Sessions;
-using System.Collections.Concurrent;
 using System.Net;
 
 namespace NetTunnel.Infrastucture
@@ -17,9 +15,7 @@ namespace NetTunnel.Infrastucture
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
 
         private readonly ITunnelTransportClient _tunnelClient;
-
-        private readonly IClientSessionFactory _sessionFactory;
-        private readonly ConcurrentDictionary<IPEndPoint, IClientSession> _sessions = new();
+        private readonly IClientSessionManager _sessionManager;
 
         private readonly IPEndPoint _targetEndpoint;
 
@@ -35,7 +31,7 @@ namespace NetTunnel.Infrastucture
             IDataSigner tunnelSigner,
             ITunnelPacketBuilder<DefaultTunnelPacket> packetBuilder,
             ITunnelTransportClient tunnelClient,
-            IClientSessionFactory sessionFactory,
+            IClientSessionManager sessionManager,
             IPEndPoint targetEndpoint)
         {
             _logger = logger;
@@ -43,7 +39,7 @@ namespace NetTunnel.Infrastucture
             _tunnelSigner = tunnelSigner;
             _packetBuilder = packetBuilder;
             _tunnelClient = tunnelClient;
-            _sessionFactory = sessionFactory;
+            _sessionManager = sessionManager;
             _targetEndpoint = targetEndpoint;
         }
 
@@ -123,17 +119,10 @@ namespace NetTunnel.Infrastucture
 
                     var deobfuscatePacket = _obfuscator.Deobfuscate(tunnelPacket.Data);
 
-                    var session = _sessions.GetOrAdd(result.RemoteEndPoint, remoteEndpoint =>
-                    {
-                        var newSession = _sessionFactory.CreateSession(_tunnelClient, remoteEndpoint);
-                        newSession.StartAsync(cancellationToken);
-
-                        return newSession;
-                    });
-
-                    await session.SendAsync(
+                    await _sessionManager.SendAsync(
                         data: deobfuscatePacket,
-                        endPoint: _targetEndpoint,
+                        remoteEndPoint: result.RemoteEndPoint,
+                        targetEndPoint: _targetEndpoint,
                         cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
