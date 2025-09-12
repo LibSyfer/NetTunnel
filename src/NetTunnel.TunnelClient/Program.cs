@@ -18,23 +18,23 @@ builder.Services.AddTransient<IDataSigner, HmacDataSigner>(sp =>
     return new HmacDataSigner(HmacDataSigner.Algorithm.SHA256, Encoding.UTF8.GetBytes("secret"));
 });
 builder.Services.AddSingleton<ITunnelPacketBuilder<DefaultTunnelPacket>, DefaultPacketBuilder>();
-builder.Services.AddTransient(sp =>
+builder.Services.AddTransient<ITunnelTransportClient>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
 
     var client = new UdpTransportClient(logger,
         new IPEndPoint(IPAddress.Any, 0));
 
-    return (ITunnelTransportClient)client;
+    return client;
 });
-builder.Services.AddTransient(sp =>
+builder.Services.AddTransient<IExternalTransportClient>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
 
     var client = new UdpTransportClient(logger,
         new IPEndPoint(IPAddress.Loopback, 8080));
 
-    return (IExternalTransportClient)client;
+    return client;
 });
 builder.Services.AddSingleton<ITunnelNode>(sp =>
 {
