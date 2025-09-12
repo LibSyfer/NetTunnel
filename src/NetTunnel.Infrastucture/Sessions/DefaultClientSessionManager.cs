@@ -11,20 +11,30 @@ namespace NetTunnel.Infrastucture.Sessions
 {
     public class DefaultClientSessionManager : IClientSessionManager
     {
+        private readonly ILogger<DefaultClientSessionManager> _logger;
         private readonly IServiceProvider _serviceProvider;
+
+        private readonly Timer _cleanupTimer;
         private readonly TimeSpan _sessionTimeout;
+
         private readonly ConcurrentDictionary<IPEndPoint, IClientSession> _sessions = new();
         
-        public DefaultClientSessionManager(IServiceProvider serviceProvider, TimeSpan sessionTimeout)
+        public DefaultClientSessionManager(ILogger<DefaultClientSessionManager> logger, IServiceProvider serviceProvider, TimeSpan sessionTimeout, TimeSpan cleanupIntervar)
         {
+            _logger = logger;
             _serviceProvider = serviceProvider;
             _sessionTimeout = sessionTimeout;
+
+            _cleanupTimer = new Timer(_ => CleanupInactiveSessions(), null,
+                cleanupIntervar, cleanupIntervar);
         }
 
         public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint remoteEndPoint, IPEndPoint targetEndPoint, CancellationToken cancellationToken)
         {
             var session = _sessions.GetOrAdd(remoteEndPoint, _ =>
             {
+                _logger.LogInformation("Create new session: {RemoteEndPoint} -> {TargetEndpoint}", remoteEndPoint, targetEndPoint);
+
                 var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger($"{typeof(DefaultClientSession).FullName}-Session: {remoteEndPoint} -> {targetEndPoint}");
 
@@ -64,6 +74,21 @@ namespace NetTunnel.Infrastucture.Sessions
                     removedSession.Dispose();
                 }
             }
+
+            _logger.LogInformation($"Cleanup {inactiveSessions.Count} inactive sessions");
+        }
+
+        public void Dispose()
+        {
+            foreach (var session in _sessions)
+            {
+                if (_sessions.TryRemove(session.Key, out var removedSession))
+                {
+                    removedSession.Dispose();
+                }
+            }
+
+            _cleanupTimer.Dispose();
         }
     }
 }
