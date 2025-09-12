@@ -42,10 +42,10 @@ namespace NetTunnel.Infrastucture.Sessions
             _ = ProcessAsync(_cts.Token);
         }
 
-        public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint endPoint, CancellationToken cancellationToken)
+        public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint targetEndPoint, CancellationToken cancellationToken)
         {
             _lastActivity = DateTime.UtcNow;
-            return await _sessionClient.SendAsync(data, endPoint, cancellationToken);
+            return await _sessionClient.SendAsync(data, targetEndPoint, cancellationToken);
         }
 
         public void Dispose()
