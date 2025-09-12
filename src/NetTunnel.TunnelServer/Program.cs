@@ -34,7 +34,7 @@ builder.Services.AddTransient<IExternalTransportClient>(sp =>
     var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
 
     var client = new UdpTransportClient(logger,
-        new IPEndPoint(IPAddress.Loopback, 8090));
+        new IPEndPoint(IPAddress.Loopback, 0));
 
     return client;
 });
