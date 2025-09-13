@@ -16,11 +16,29 @@ namespace NetTunnel.Infrastucture.Sessions
         private readonly IDataSigner _signer;
         private readonly ITunnelPacketBuilder<DefaultTunnelPacket> _packetBuilder;
         private readonly IPEndPoint _replyEndpoint;
+
         private DateTime _lastActivity;
+        private object _activityLock = new object();
 
         private CancellationTokenSource _cts;
 
-        public DateTime LastActivity => _lastActivity;
+        public DateTime LastActivity
+        {
+            get
+            {
+                lock (_activityLock)
+                {
+                    return _lastActivity;
+                }
+            }
+            private set
+            {
+                lock (_activityLock)
+                {
+                    _lastActivity = value;
+                }
+            }
+        }
 
         public DefaultClientSession(ILogger logger,
             ITransportClient sessionClient,
@@ -44,7 +62,7 @@ namespace NetTunnel.Infrastucture.Sessions
 
         public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint targetEndPoint, CancellationToken cancellationToken)
         {
-            _lastActivity = DateTime.UtcNow;
+            LastActivity = DateTime.UtcNow;
             return await _sessionClient.SendAsync(data, targetEndPoint, cancellationToken);
         }
 
@@ -75,7 +93,7 @@ namespace NetTunnel.Infrastucture.Sessions
 
                     var tunnelRawData = _packetBuilder.BuildPacket(tunnelPacket);
 
-                    _lastActivity = DateTime.UtcNow;
+                    LastActivity = DateTime.UtcNow;
                     await _replyClient.SendAsync(
                         data: tunnelRawData,
                         endPoint: _replyEndpoint,
