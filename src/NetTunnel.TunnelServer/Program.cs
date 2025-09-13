@@ -38,7 +38,16 @@ builder.Services.AddTransient<IExternalTransportClient>(sp =>
 
     return client;
 });
-builder.Services.AddSingleton<IClientSessionManager, DefaultClientSessionManager>();
+builder.Services.AddSingleton<IClientSessionManager>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<DefaultClientSessionManager>>();
+
+    return new DefaultClientSessionManager(logger,
+        sp,
+        TimeSpan.FromMinutes(10),
+        TimeSpan.FromMinutes(2)
+        );
+});
 
 builder.Services.AddSingleton<ITunnelNode>(sp =>
 {
