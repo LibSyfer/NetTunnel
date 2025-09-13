@@ -87,7 +87,7 @@ namespace NetTunnel.Test
                     var result = await _client.ReceiveAsync(cancellationToken);
                     var message = Encoding.UTF8.GetString(result.Buffer);
 
-                    _logger.LogInformation($"Receive request message: {message}");
+                    _logger.LogInformation($"Receive request message from {result.RemoteEndPoint}: {message}");
 
                     await _client.SendAsync(new ReadOnlyMemory<byte>(result.Buffer), result.RemoteEndPoint, cancellationToken);
                 }
