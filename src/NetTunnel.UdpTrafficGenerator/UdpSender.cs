@@ -87,12 +87,13 @@ namespace NetTunnel.UdpTrafficGenerator
         private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
         {
             int paketIndex = 1;
+
+            await Task.Delay(2000);
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    
-
                     var data = Encoding.UTF8.GetBytes($"{_sendingMessage} {paketIndex++}");
 
                     _logger.LogInformation($"Request message: {Encoding.UTF8.GetString(data)}");
