@@ -19,13 +19,10 @@ namespace NetTunnel.Infrastucture.Processing
             _client = new UdpClient(listenEndpoint);
         }
 
-        public IPEndPoint? EndPoint => (IPEndPoint?)_client.Client.LocalEndPoint;
+        public IPEndPoint? EndPoint => _client.Client.LocalEndPoint as IPEndPoint;
 
         public async Task<TransportClientResult> ReceiveAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync(cancellationToken);
-            try
-            {
                 var udpReceiveResult = await _client.ReceiveAsync(cancellationToken);
                 _logger.LogDebug("Receive {BytesLength}bytes from {RemoteEndpoint}", udpReceiveResult.Buffer, udpReceiveResult.RemoteEndPoint);
 
@@ -35,25 +32,12 @@ namespace NetTunnel.Infrastucture.Processing
                     RemoteEndPoint = udpReceiveResult.RemoteEndPoint,
                 };
             }
-            finally
-            {
-                _semaphore.Release();
-            }
-        }
 
         public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint endPoint, CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync(cancellationToken);
-            try
-            {
                 _logger.LogDebug("Send {BytesLength}bytes to {TargetEndpoint}", data.Length, endPoint);
                 return await _client.SendAsync(data, endPoint, cancellationToken);
             }
-            finally
-            {
-                _semaphore.Release();
-            }
-        }
 
         public void Dispose()
         {
