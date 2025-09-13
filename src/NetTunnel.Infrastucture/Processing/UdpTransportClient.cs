@@ -10,6 +10,7 @@ namespace NetTunnel.Infrastucture.Processing
     {
         private readonly ILogger<UdpTransportClient> _logger;
         private readonly UdpClient _client;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public UdpTransportClient(ILogger<UdpTransportClient> logger,
             IPEndPoint listenEndpoint)
@@ -22,20 +23,36 @@ namespace NetTunnel.Infrastucture.Processing
 
         public async Task<TransportClientResult> ReceiveAsync(CancellationToken cancellationToken)
         {
-            var udpReceiveResult = await _client.ReceiveAsync(cancellationToken);
-            _logger.LogDebug("Receive {BytesLength}bytes from {RemoteEndpoint}", udpReceiveResult.Buffer, udpReceiveResult.RemoteEndPoint);
-
-            return new TransportClientResult
+            await _semaphore.WaitAsync(cancellationToken);
+            try
             {
-                Data = udpReceiveResult.Buffer,
-                RemoteEndPoint = udpReceiveResult.RemoteEndPoint,
-            };
+                var udpReceiveResult = await _client.ReceiveAsync(cancellationToken);
+                _logger.LogDebug("Receive {BytesLength}bytes from {RemoteEndpoint}", udpReceiveResult.Buffer, udpReceiveResult.RemoteEndPoint);
+
+                return new TransportClientResult
+                {
+                    Data = udpReceiveResult.Buffer,
+                    RemoteEndPoint = udpReceiveResult.RemoteEndPoint,
+                };
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         public async Task<int> SendAsync(ReadOnlyMemory<byte> data, IPEndPoint endPoint, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Send {BytesLength}bytes to {TargetEndpoint}", data.Length, endPoint);
-            return await _client.SendAsync(data, endPoint, cancellationToken);
+            await _semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                _logger.LogDebug("Send {BytesLength}bytes to {TargetEndpoint}", data.Length, endPoint);
+                return await _client.SendAsync(data, endPoint, cancellationToken);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         public void Dispose()
