@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using NetTunnel.Application.Entities;
 using NetTunnel.Application.Interfaces;
 using NetTunnel.Domain.Interfaces;
@@ -9,13 +10,20 @@ using System.Net;
 using System.Text;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.Configure<ClientSettings>(builder.Configuration.GetSection(ClientSettings.Section));
+
 builder.Services.AddTransient<IDataObfuscator, XorDataObfuscator>(sp =>
 {
-    return new XorDataObfuscator(Encoding.UTF8.GetBytes("secret"));
+    var clientSettings = sp.GetRequiredService<IOptions<ClientSettings>>().Value;
+
+    return new XorDataObfuscator(Encoding.UTF8.GetBytes(clientSettings.PreSharedKey));
 });
 builder.Services.AddTransient<IDataSigner, HmacDataSigner>(sp =>
 {
-    return new HmacDataSigner(HmacDataSigner.Algorithm.SHA256, Encoding.UTF8.GetBytes("secret"));
+    var clientSettings = sp.GetRequiredService<IOptions<ClientSettings>>().Value;
+
+    return new HmacDataSigner(HmacDataSigner.Algorithm.SHA256, Encoding.UTF8.GetBytes(clientSettings.PreSharedKey));
 });
 builder.Services.AddSingleton<ITunnelPacketBuilder<DefaultTunnelPacket>, StreamPacketBuilder>();
 builder.Services.AddTransient<ITunnelTransportClient>(sp =>
@@ -30,9 +38,10 @@ builder.Services.AddTransient<ITunnelTransportClient>(sp =>
 builder.Services.AddTransient<IExternalTransportClient>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
+    var clientSettings = sp.GetRequiredService<IOptions<ClientSettings>>().Value;
 
     var client = new UdpTransportClient(logger,
-        new IPEndPoint(IPAddress.Loopback, 8080));
+        new IPEndPoint(clientSettings.GetListenIp, clientSettings.ListenPort));
 
     return client;
 });
@@ -45,6 +54,7 @@ builder.Services.AddSingleton<ITunnelNode>(sp =>
     var packerBuilder = sp.GetRequiredService<ITunnelPacketBuilder<DefaultTunnelPacket>>();
     var tunnelClient = sp.GetRequiredService<ITunnelTransportClient>();
     var externalClient = sp.GetRequiredService<IExternalTransportClient>();
+    var clientSettings = sp.GetRequiredService<IOptions<ClientSettings>>().Value;
 
     return new TunnelClient(logger,
         obfuscator,
@@ -53,7 +63,7 @@ builder.Services.AddSingleton<ITunnelNode>(sp =>
         packerBuilder,
         tunnelClient,
         externalClient,
-        new IPEndPoint(IPAddress.Loopback, 5555)
+        new IPEndPoint(clientSettings.GetServerIp, clientSettings.ServerPort)
         );
 });
 
