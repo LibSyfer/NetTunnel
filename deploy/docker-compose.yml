@@ -26,6 +26,8 @@ services:
     build:
       context: ..
       dockerfile: src/NetTunnel.TunnelServer/Dockerfile
+    ports:
+      - 5555:5555/udp
     networks:
       net-tunnel-network:
         ipv4_address: 10.0.0.4
