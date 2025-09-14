@@ -8,21 +8,21 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
 
 
-  nettunnel.client:
+  nettunnel.tunnelclient:
     environment:
       DOTNET_ENVIRONMENT: Development
-      Logging__LogLevel__NetTunnel.Core.UdpTunnelClient: Debug
-      ClientSettings__ServerIp: 10.0.0.4
+      Logging__LogLevel__NetTunnel.Infrastucture.TunnelClient: Debug
+      TunnelClientSettings__ServerIp: 10.0.0.4
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
 
 
-  nettunnel.server:
+  nettunnel.tunnelserver:
     environment:
       DOTNET_ENVIRONMENT: Development
-      Logging__LogLevel__NetTunnel.Core.UdpTunnelServer: Debug
-      ServerSettings__TargetIp: 10.0.0.5
+      Logging__LogLevel__NetTunnel.Infrastucture.TunnelServer: Debug
+      TunnelServerSettings__TargetIp: 10.0.0.5
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

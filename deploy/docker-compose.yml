@@ -10,23 +10,22 @@ services:
         ipv4_address: 10.0.0.2
 
 
-  nettunnel.client:
-    image: ${DOCKER_REGISTRY-}nettunnelclient
+  nettunnel.tunnelclient:
+    image: ${DOCKER_REGISTRY-}nettunneltunnelclient
     profiles: [client]
     build:
       context: ..
-      dockerfile: src/NetTunnel.Client/Dockerfile
+      dockerfile: src/NetTunnel.TunnelClient/Dockerfile
     networks:
       net-tunnel-network:
         ipv4_address: 10.0.0.3
 
-
-  nettunnel.server:
-    image: ${DOCKER_REGISTRY-}nettunnelserver
+  nettunnel.tunnelserver:
+    image: ${DOCKER_REGISTRY-}nettunneltunnelserver
     profiles: [server]
     build:
       context: ..
-      dockerfile: src/NetTunnel.Server/Dockerfile
+      dockerfile: src/NetTunnel.TunnelServer/Dockerfile
     networks:
       net-tunnel-network:
         ipv4_address: 10.0.0.4
@@ -42,9 +41,12 @@ services:
       net-tunnel-network:
         ipv4_address: 10.0.0.5
 
+
 networks:
   net-tunnel-network:
     driver: bridge
     ipam:
       config:
         - subnet: 10.0.0.0/29
+
+

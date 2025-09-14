@@ -4,10 +4,10 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "nettunnel.client": "StartDebugging",
         "nettunnel.udptrafficgenerator": "StartDebugging",
-        "nettunnel.server": "StartDebugging",
-        "nettunnel.udpechoserver": "StartDebugging"
+        "nettunnel.udpechoserver": "StartDebugging",
+        "nettunnel.tunnelclient": "StartDebugging",
+        "nettunnel.tunnelserver": "StartDebugging"
       }
     },
     "Client-Test": {
