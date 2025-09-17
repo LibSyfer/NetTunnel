@@ -136,6 +136,9 @@ namespace NetTunnel.Infrastucture
                 try
                 {
                     var result = await _externalClient.ReceiveAsync(cancellationToken);
+
+                    _logger.LogDebug("Received external {PacketLength}bytes packet from {RemoteEndPoint}", result.Data.Length, result.RemoteEndPoint);
+
                     var data = result.Data;
                     var remoteEndpoint = result.RemoteEndPoint;
 
@@ -183,6 +186,9 @@ namespace NetTunnel.Infrastucture
                 try
                 {
                     var result = await _tunnelClient.ReceiveAsync(cancellationToken);
+
+                    _logger.LogDebug("Received reply tunnel {PacketLength}bytes packet from {RemoteEndPoint}", result.Data.Length, result.RemoteEndPoint);
+
                     var data = result.Data;
 
                     var tunnelPacket = _packetBuilder.ParsePacket(data);

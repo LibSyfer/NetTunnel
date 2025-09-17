@@ -80,6 +80,9 @@ namespace NetTunnel.Infrastucture.Sessions
                 try
                 {
                     var result = await _sessionClient.ReceiveAsync(cancellationToken);
+
+                    _logger.LogDebug("Received reply external {PacketLength}bytes packet from {RemoteEndPoint}", result.Data.Length, result.RemoteEndPoint);
+
                     var data = result.Data;
 
                     var obfuscatePacket = _obfuscator.Obfuscate(data);
