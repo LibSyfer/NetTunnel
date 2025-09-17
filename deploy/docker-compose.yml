@@ -1,7 +1,7 @@
 services:
   nettunnel.udptrafficgenerator:
     image: ${DOCKER_REGISTRY-}nettunneludptrafficgenerator
-    profiles: [client]
+    profiles: [client-test]
     build:
       context: ..
       dockerfile: src/NetTunnel.UdpTrafficGenerator/Dockerfile
@@ -12,7 +12,7 @@ services:
 
   nettunnel.tunnelclient:
     image: ${DOCKER_REGISTRY-}nettunneltunnelclient
-    profiles: [client]
+    profiles: [client, client-test]
     build:
       context: ..
       dockerfile: src/NetTunnel.TunnelClient/Dockerfile
@@ -22,7 +22,7 @@ services:
 
   nettunnel.tunnelserver:
     image: ${DOCKER_REGISTRY-}nettunneltunnelserver
-    profiles: [server]
+    profiles: [server, server-test]
     build:
       context: ..
       dockerfile: src/NetTunnel.TunnelServer/Dockerfile
@@ -35,7 +35,7 @@ services:
 
   nettunnel.udpechoserver:
     image: ${DOCKER_REGISTRY-}nettunneludpechoserver
-    profiles: [server]
+    profiles: [server-test]
     build:
       context: ..
       dockerfile: src/NetTunnel.UdpEchoServer/Dockerfile
