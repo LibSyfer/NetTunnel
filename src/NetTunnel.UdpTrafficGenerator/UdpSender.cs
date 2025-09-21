@@ -96,7 +96,7 @@ namespace NetTunnel.UdpTrafficGenerator
                 {
                     var data = Encoding.UTF8.GetBytes($"{_sendingMessage} {paketIndex++}");
 
-                    _logger.LogInformation($"Request message: {Encoding.UTF8.GetString(data)}");
+                    _logger.LogInformation($"Send message: {Encoding.UTF8.GetString(data)} to {_targetEndpoint}");
 
                     await _client.SendAsync(new ReadOnlyMemory<byte>(data), _targetEndpoint, cancellationToken);
 
@@ -123,7 +123,7 @@ namespace NetTunnel.UdpTrafficGenerator
                     var result = await _client.ReceiveAsync(cancellationToken);
                     var message = Encoding.UTF8.GetString(result.Buffer);
 
-                    _logger.LogInformation($"Reply message: {message}");
+                    _logger.LogInformation($"Reply message: {message} from {result.RemoteEndPoint}");
                 }
                 catch (OperationCanceledException)
                 {
