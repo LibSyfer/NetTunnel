@@ -16,12 +16,20 @@ namespace NetTunnel.TunnelNode
         public int TunnelTargetPort { get; set; }
 
         public IPAddress GetExternalListenIp => IPAddress.Parse(ExternalListenIp);
-        public IPAddress GetExternalTargetIp =>
-            Dns.GetHostEntry(ExternalTargetHost).AddressList.FirstOrDefault() ??
-            throw new InvalidOperationException($"Could not resolve IP address for host: {ExternalTargetHost}");
+        public IPAddress GetExternalTargetIp => GetIpAddressFromString(ExternalTargetHost);
         public IPAddress GetTunnelListenIp => IPAddress.Parse(TunnelListenIp);
-        public IPAddress GetTunnelTargetIp =>
-            Dns.GetHostEntry(TunnelTargetHost).AddressList.FirstOrDefault() ??
-            throw new InvalidOperationException($"Could not resolve IP address for host: {TunnelTargetHost}");
+        public IPAddress GetTunnelTargetIp => GetIpAddressFromString(TunnelTargetHost);
+
+        public static IPAddress GetIpAddressFromString(string address)
+        {
+            if (address == null)
+                throw new ArgumentNullException("Address string cannot be null");
+
+            if (IPAddress.TryParse(address, out IPAddress? ipAddress))
+                return ipAddress;
+
+            return Dns.GetHostEntry(address).AddressList.FirstOrDefault() ??
+                throw new InvalidOperationException($"Cannot resolve address: {address}");
+        }
     }
 }
