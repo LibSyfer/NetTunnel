@@ -2,27 +2,43 @@ services:
   nettunnel.udptrafficgenerator:
     environment:
       DOTNET_ENVIRONMENT: Development
-      TraficGeneratorSettings__TargetIp: 10.0.0.3
+      TraficGeneratorSettings__ListenPort: 4000
+      TraficGeneratorSettings__TargetHost: nettunnel.client-tunnelnode
+      TraficGeneratorSettings__TargetPort: 5000
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
 
 
-  nettunnel.tunnelclient:
+  nettunnel.client-tunnelnode:
     environment:
       DOTNET_ENVIRONMENT: Development
-      Logging__LogLevel__NetTunnel.Infrastucture.TunnelClient: Debug
-      TunnelClientSettings__ServerIp: 10.0.0.4
+      Logging__LogLevel__NetTunnel.Infrastucture.TunnelNode: Debug
+
+      TunnelNodeSettings__ExternalListenPort: 5000
+      TunnelNodeSettings__ExternalTargetHost: nettunnel.udptrafficgenerator
+      TunnelNodeSettings__ExternalTargetPort: 4000
+
+      TunnelNodeSettings__TunnelListenPort: 5100
+      TunnelNodeSettings__TunnelTargetHost: nettunnel.server-tunnelnode
+      TunnelNodeSettings__TunnelTargetPort: 6100
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
 
 
-  nettunnel.tunnelserver:
+  nettunnel.server-tunnelnode:
     environment:
       DOTNET_ENVIRONMENT: Development
-      Logging__LogLevel__NetTunnel.Infrastucture.TunnelServer: Debug
-      TunnelServerSettings__TargetIp: 10.0.0.5
+      Logging__LogLevel__NetTunnel.Infrastucture.TunnelNode: Debug
+
+      TunnelNodeSettings__TunnelListenPort: 6100
+      TunnelNodeSettings__TunnelTargetHost: nettunnel.client-tunnelnode
+      TunnelNodeSettings__TunnelTargetPort: 5100
+
+      TunnelNodeSettings__ExternalListenPort: 5000
+      TunnelNodeSettings__ExternalTargetHost: nettunnel.udpechoserver
+      TunnelNodeSettings__ExternalTargetPort: 7000
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -31,6 +47,7 @@ services:
   nettunnel.udpechoserver:
     environment:
       DOTNET_ENVIRONMENT: Development
+      UdpEchoServerSettings__ListenPort: 7000
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
