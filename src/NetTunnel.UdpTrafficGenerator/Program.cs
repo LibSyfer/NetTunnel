@@ -8,12 +8,13 @@ builder.Services.Configure<TraficGeneratorSettings>(builder.Configuration.GetSec
 builder.Services.AddSingleton(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<UdpSender>>();
-    var trafficGeneratorSettings = sp.GetRequiredService<IOptions<TraficGeneratorSettings>>().Value;
+    var settings = sp.GetRequiredService<IOptions<TraficGeneratorSettings>>().Value;
 
     return new UdpSender(logger,
-        new IPEndPoint(trafficGeneratorSettings.GetTargetIp, trafficGeneratorSettings.TargetPort),
-        TimeSpan.FromMilliseconds(trafficGeneratorSettings.SendingDelayMs),
-        trafficGeneratorSettings.SendingMessage);
+        new IPEndPoint(settings.GetListenIp, settings.ListenPort),
+        new IPEndPoint(settings.GetTargetIp, settings.TargetPort),
+        TimeSpan.FromMilliseconds(settings.SendingDelayMs),
+        settings.SendingMessage);
 });
 
 builder.Services.AddHostedService<TrafficGeneratorHostedService>();

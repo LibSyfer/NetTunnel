@@ -12,7 +12,7 @@ namespace NetTunnel.UdpTrafficGenerator
         public int SendingDelayMs { get; set; }
         public string SendingMessage { get; set; } = string.Empty;
 
-        public IPAddress GetListenIpp => IPAddress.Parse(ListenIp);
+        public IPAddress GetListenIp => IPAddress.Parse(ListenIp);
         public IPAddress GetTargetIp =>
             Dns.GetHostEntry(TargetHost).AddressList.FirstOrDefault() ??
             throw new InvalidOperationException($"Could not resolve IP address for host: {TargetHost}");
