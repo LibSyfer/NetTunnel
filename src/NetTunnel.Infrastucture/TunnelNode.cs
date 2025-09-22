@@ -142,7 +142,7 @@ namespace NetTunnel.Infrastucture
                     var data = result.Data;
                     var remoteEndPoint = result.RemoteEndPoint;
 
-                    _logger.LogDebug("Received external {PacketLength}bytes packet from {RemoteEndPoint}", data.Length, remoteEndPoint);
+                    _logger.LogDebug("Received tunnel {PacketLength}bytes packet from {RemoteEndPoint}", data.Length, remoteEndPoint);
 
                     // deobfuscate
 

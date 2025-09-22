@@ -36,7 +36,7 @@ services:
       TunnelNodeSettings__TunnelTargetHost: nettunnel.client-tunnelnode
       TunnelNodeSettings__TunnelTargetPort: 5100
 
-      TunnelNodeSettings__ExternalListenPort: 5000
+      TunnelNodeSettings__ExternalListenPort: 6000
       TunnelNodeSettings__ExternalTargetHost: nettunnel.udpechoserver
       TunnelNodeSettings__ExternalTargetPort: 7000
     volumes:
