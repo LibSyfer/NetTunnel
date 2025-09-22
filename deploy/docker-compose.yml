@@ -7,8 +7,9 @@ services:
       context: ..
       dockerfile: src/NetTunnel.UdpTrafficGenerator/Dockerfile
     environment:
+      TraficGeneratorSettings__ListenIp: 127.0.0.1
       TraficGeneratorSettings__ListenPort: 4000
-      TraficGeneratorSettings__TargetHost: nettunnel.client-tunnelnode
+      TraficGeneratorSettings__TargetHost: 127.0.0.1
       TraficGeneratorSettings__TargetPort: 5000
 
 
@@ -20,12 +21,14 @@ services:
       context: ..
       dockerfile: src/NetTunnel.TunnelNode/Dockerfile
     environment:
+      TunnelNodeSettings__ExternalListenIp: 127.0.0.1
       TunnelNodeSettings__ExternalListenPort: 5000
-      TunnelNodeSettings__ExternalTargetHost: nettunnel.udptrafficgenerator
+      TunnelNodeSettings__ExternalTargetHost: 127.0.0.1
       TunnelNodeSettings__ExternalTargetPort: 4000
 
+      TunnelNodeSettings__TunnelListenIp: 127.0.0.1
       TunnelNodeSettings__TunnelListenPort: 5100
-      TunnelNodeSettings__TunnelTargetHost: nettunnel.server-tunnelnode
+      TunnelNodeSettings__TunnelTargetHost: 127.0.0.1
       TunnelNodeSettings__TunnelTargetPort: 6100
 
 
@@ -37,12 +40,14 @@ services:
       context: ..
       dockerfile: src/NetTunnel.TunnelNode/Dockerfile
     environment:
+      TunnelNodeSettings__TunnelListenIp: 127.0.0.1
       TunnelNodeSettings__TunnelListenPort: 6100
-      TunnelNodeSettings__TunnelTargetHost: nettunnel.client-tunnelnode
+      TunnelNodeSettings__TunnelTargetHost: 127.0.0.1
       TunnelNodeSettings__TunnelTargetPort: 5100
 
+      TunnelNodeSettings__ExternalListenIp: 127.0.0.1
       TunnelNodeSettings__ExternalListenPort: 6000
-      TunnelNodeSettings__ExternalTargetHost: nettunnel.udpechoserver
+      TunnelNodeSettings__ExternalTargetHost: 127.0.0.1
       TunnelNodeSettings__ExternalTargetPort: 7000
 
 
@@ -54,6 +59,7 @@ services:
       context: ..
       dockerfile: src/NetTunnel.UdpEchoServer/Dockerfile
     environment:
+      UdpEchoServerSettings__ListenIp: 127.0.0.1
       UdpEchoServerSettings__ListenPort: 7000
 
 
