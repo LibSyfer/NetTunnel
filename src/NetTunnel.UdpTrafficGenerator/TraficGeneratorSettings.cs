@@ -13,8 +13,18 @@ namespace NetTunnel.UdpTrafficGenerator
         public string SendingMessage { get; set; } = string.Empty;
 
         public IPAddress GetListenIp => IPAddress.Parse(ListenIp);
-        public IPAddress GetTargetIp =>
-            Dns.GetHostEntry(TargetHost).AddressList.FirstOrDefault() ??
-            throw new InvalidOperationException($"Could not resolve IP address for host: {TargetHost}");
+        public IPAddress GetTargetIp => GetIpAddressFromString(TargetHost);
+
+        public static IPAddress GetIpAddressFromString(string address)
+        {
+            if (address == null)
+                throw new ArgumentNullException("Address string cannot be null");
+
+            if (IPAddress.TryParse(address, out IPAddress? ipAddress))
+                return ipAddress;
+
+            return Dns.GetHostEntry(address).AddressList.FirstOrDefault() ??
+                throw new InvalidOperationException($"Cannot resolve address: {address}");
+        }
     }
 }
