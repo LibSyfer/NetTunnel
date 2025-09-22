@@ -9,26 +9,48 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<TunnelNodeSettings>(builder.Configuration.GetSection(TunnelNodeSettings.Section));
 
+//builder.Services.AddSingleton<IExternalTransportClient>(sp =>
+//{
+//    var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
+//    var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
+
+//    var client = new UdpTransportClient(
+//        logger,
+//        new IPEndPoint(settings.GetExternalListenIp, settings.ExternalListenPort)
+//        );
+
+//    return client;
+//});
+
 builder.Services.AddSingleton<IExternalTransportClient>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
     var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
 
-    var client = new UdpTransportClient(
-        logger,
+    var client = new ClearUdpTransportClient(
         new IPEndPoint(settings.GetExternalListenIp, settings.ExternalListenPort)
         );
 
     return client;
 });
 
+//builder.Services.AddSingleton<ITunnelTransportClient>(sp =>
+//{
+//    var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
+//    var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
+
+//    var client = new UdpTransportClient(
+//        logger,
+//        new IPEndPoint(settings.GetTunnelListenIp, settings.TunnelListenPort)
+//        );
+
+//    return client;
+//});
+
 builder.Services.AddSingleton<ITunnelTransportClient>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger<UdpTransportClient>>();
     var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
 
-    var client = new UdpTransportClient(
-        logger,
+    var client = new ClearUdpTransportClient(
         new IPEndPoint(settings.GetTunnelListenIp, settings.TunnelListenPort)
         );
 
