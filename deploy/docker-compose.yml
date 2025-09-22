@@ -2,52 +2,59 @@ services:
   nettunnel.udptrafficgenerator:
     image: ${DOCKER_REGISTRY-}nettunneludptrafficgenerator
     profiles: [client-test]
+    network_mode: "host"
     build:
       context: ..
       dockerfile: src/NetTunnel.UdpTrafficGenerator/Dockerfile
-    networks:
-      net-tunnel-network:
-        ipv4_address: 10.0.0.2
+    environment:
+      TraficGeneratorSettings__ListenPort: 4000
+      TraficGeneratorSettings__TargetHost: nettunnel.client-tunnelnode
+      TraficGeneratorSettings__TargetPort: 5000
 
 
   nettunnel.client-tunnelnode:
     image: ${DOCKER_REGISTRY-}nettunneltunnelnode
     profiles: [client, client-test]
+    network_mode: "host"
     build:
       context: ..
       dockerfile: src/NetTunnel.TunnelNode/Dockerfile
-    networks:
-      net-tunnel-network:
-        ipv4_address: 10.0.0.3
+    environment:
+      TunnelNodeSettings__ExternalListenPort: 5000
+      TunnelNodeSettings__ExternalTargetHost: nettunnel.udptrafficgenerator
+      TunnelNodeSettings__ExternalTargetPort: 4000
+
+      TunnelNodeSettings__TunnelListenPort: 5100
+      TunnelNodeSettings__TunnelTargetHost: nettunnel.server-tunnelnode
+      TunnelNodeSettings__TunnelTargetPort: 6100
 
 
   nettunnel.server-tunnelnode:
     image: ${DOCKER_REGISTRY-}nettunneltunnelnode
     profiles: [server, server-test]
+    network_mode: "host"
     build:
       context: ..
       dockerfile: src/NetTunnel.TunnelNode/Dockerfile
-    networks:
-      net-tunnel-network:
-        ipv4_address: 10.0.0.4
+    environment:
+      TunnelNodeSettings__TunnelListenPort: 6100
+      TunnelNodeSettings__TunnelTargetHost: nettunnel.client-tunnelnode
+      TunnelNodeSettings__TunnelTargetPort: 5100
+
+      TunnelNodeSettings__ExternalListenPort: 6000
+      TunnelNodeSettings__ExternalTargetHost: nettunnel.udpechoserver
+      TunnelNodeSettings__ExternalTargetPort: 7000
 
 
   nettunnel.udpechoserver:
     image: ${DOCKER_REGISTRY-}nettunneludpechoserver
     profiles: [server-test]
+    network_mode: "host"
     build:
       context: ..
       dockerfile: src/NetTunnel.UdpEchoServer/Dockerfile
-    networks:
-      net-tunnel-network:
-        ipv4_address: 10.0.0.5
-
-networks:
-  net-tunnel-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.0.0.0/29
+    environment:
+      UdpEchoServerSettings__ListenPort: 7000
 
 
 
