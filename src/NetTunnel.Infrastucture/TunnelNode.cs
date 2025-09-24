@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetTunnel.Application.Interfaces;
+using NetTunnel.Domain.Interfaces;
 using System.Net;
 
 namespace NetTunnel.Infrastucture
@@ -9,6 +10,7 @@ namespace NetTunnel.Infrastucture
         private readonly ILogger<TunnelNode> _logger;
         private readonly IExternalTransportClient _externalClient;
         private readonly ITunnelTransportClient _tunnelClient;
+        private readonly IDataObfuscator _obfuscator;
 
         private readonly IPEndPoint _externalTargetEndPoint;
         private readonly IPEndPoint _tunnelTargetEndPoint;
@@ -25,6 +27,7 @@ namespace NetTunnel.Infrastucture
             ILogger<TunnelNode> logger,
             IExternalTransportClient externalClient,
             ITunnelTransportClient tunnelClient,
+            IDataObfuscator obfuscator,
             IPEndPoint externalTargetEndPoint,
             IPEndPoint tunnelTargetEndPoint)
         {
@@ -33,6 +36,7 @@ namespace NetTunnel.Infrastucture
             _tunnelClient = tunnelClient;
             _externalTargetEndPoint = externalTargetEndPoint;
             _tunnelTargetEndPoint = tunnelTargetEndPoint;
+            _obfuscator = obfuscator;
         }
 
         public Task StartAsync(CancellationToken cancellationToken = default)
@@ -109,10 +113,11 @@ namespace NetTunnel.Infrastucture
                     _logger.LogDebug("Received external {PacketLength}bytes packet from {RemoteEndPoint}", data.Length, remoteEndPoint);
 
                     // obfuscate
+                    var obfuscateData = _obfuscator.Obfuscate(data);
 
                     _logger.LogTrace("Forward packet to tunnel {TunnelEndPoint}", _tunnelTargetEndPoint);
                     await _tunnelClient.SendAsync(
-                        data: data,
+                        data: obfuscateData,
                         endPoint: _tunnelTargetEndPoint,
                         cancellationToken: cancellationToken);
                 }
@@ -145,10 +150,11 @@ namespace NetTunnel.Infrastucture
                     _logger.LogDebug("Received tunnel {PacketLength}bytes packet from {RemoteEndPoint}", data.Length, remoteEndPoint);
 
                     // deobfuscate
+                    var deobfuscateData = _obfuscator.Deobfuscate(data);
 
                     _logger.LogTrace("Forward packet to external {ExternalEndPoint}", _externalTargetEndPoint);
                     await _externalClient.SendAsync(
-                        data: data,
+                        data: deobfuscateData,
                         endPoint: _externalTargetEndPoint,
                         cancellationToken: cancellationToken);
                 }
