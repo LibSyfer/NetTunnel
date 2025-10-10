@@ -1,7 +1,7 @@
 services:
   nettunnel.udptrafficgenerator:
     image: ${DOCKER_REGISTRY-}nettunneludptrafficgenerator
-    profiles: [client-test]
+    profiles: [client-test, all]
     network_mode: "host"
     build:
       context: ..
@@ -15,7 +15,7 @@ services:
 
   nettunnel.client-tunnelnode:
     image: ${DOCKER_REGISTRY-}nettunneltunnelnode
-    profiles: [client, client-test]
+    profiles: [client, client-test, all]
     network_mode: "host"
     build:
       context: ..
@@ -34,7 +34,7 @@ services:
 
   nettunnel.server-tunnelnode:
     image: ${DOCKER_REGISTRY-}nettunneltunnelnode
-    profiles: [server, server-test]
+    profiles: [server, server-test, all]
     network_mode: "host"
     build:
       context: ..
@@ -53,7 +53,7 @@ services:
 
   nettunnel.udpechoserver:
     image: ${DOCKER_REGISTRY-}nettunneludpechoserver
-    profiles: [server-test]
+    profiles: [server-test, all]
     network_mode: "host"
     build:
       context: ..

@@ -16,7 +16,7 @@ builder.Services.AddSingleton<IExternalTransportClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
 
-    var client = new ClearUdpTransportClient(
+    var client = new UdpTransportClient(
         new IPEndPoint(settings.GetExternalListenIp, settings.ExternalListenPort)
         );
 
@@ -27,7 +27,7 @@ builder.Services.AddSingleton<ITunnelTransportClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<TunnelNodeSettings>>().Value;
 
-    var client = new ClearUdpTransportClient(
+    var client = new UdpTransportClient(
         new IPEndPoint(settings.GetTunnelListenIp, settings.TunnelListenPort)
         );
 
