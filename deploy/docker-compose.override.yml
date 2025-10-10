@@ -1,0 +1,31 @@
+services:
+  nettunnel.udptrafficgenerator:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.client-tunnelnode:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.server-tunnelnode:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
+
+  nettunnel.udpechoserver:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
