@@ -19,10 +19,10 @@ namespace NetTunnel.UdpTrafficGenerator
         private bool _isDisposed = false;
         private object _lock = new object();
 
-        public UdpSender(ILogger<UdpSender> logger, IPEndPoint targetEndpoint, TimeSpan sendingDelay, string sendingMessage)
+        public UdpSender(ILogger<UdpSender> logger, IPEndPoint listenEndpoint, IPEndPoint targetEndpoint, TimeSpan sendingDelay, string sendingMessage)
         {
             _logger = logger;
-            _client = new UdpClient(0);
+            _client = new UdpClient(listenEndpoint);
             _client.Client.ReceiveTimeout = 1000;
             _client.Client.SendTimeout = 1000;
             _targetEndpoint = targetEndpoint;
@@ -96,7 +96,7 @@ namespace NetTunnel.UdpTrafficGenerator
                 {
                     var data = Encoding.UTF8.GetBytes($"{_sendingMessage} {paketIndex++}");
 
-                    _logger.LogInformation($"Request message: {Encoding.UTF8.GetString(data)}");
+                    _logger.LogInformation($"Send message: {Encoding.UTF8.GetString(data)} to {_targetEndpoint}");
 
                     await _client.SendAsync(new ReadOnlyMemory<byte>(data), _targetEndpoint, cancellationToken);
 
@@ -123,7 +123,7 @@ namespace NetTunnel.UdpTrafficGenerator
                     var result = await _client.ReceiveAsync(cancellationToken);
                     var message = Encoding.UTF8.GetString(result.Buffer);
 
-                    _logger.LogInformation($"Reply message: {message}");
+                    _logger.LogInformation($"Reply message: {message} from {result.RemoteEndPoint}");
                 }
                 catch (OperationCanceledException)
                 {

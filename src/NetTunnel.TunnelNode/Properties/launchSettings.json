@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "NetTunnel.TunnelClient": {
+    "NetTunnel.TunnelNode": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"

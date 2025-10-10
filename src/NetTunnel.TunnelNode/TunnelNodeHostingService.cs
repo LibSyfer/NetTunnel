@@ -1,13 +1,13 @@
 ﻿using NetTunnel.Application.Interfaces;
 
-namespace NetTunnel.TunnelClient
+namespace NetTunnel.TunnelNode
 {
-    public class TunnelClientHostingService : IHostedService
+    internal class TunnelNodeHostingService : IHostedService
     {
-        private readonly ILogger<TunnelClientHostingService> _logger;
+        private readonly ILogger<TunnelNodeHostingService> _logger;
         private readonly ITunnelNode _client;
 
-        public TunnelClientHostingService(ILogger<TunnelClientHostingService> logger, ITunnelNode client)
+        public TunnelNodeHostingService(ILogger<TunnelNodeHostingService> logger, ITunnelNode client)
         {
             _logger = logger;
             _client = client;

@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-NetTunnel.TunnelClient-924dd2e6-7fbe-47ab-96b6-b2d469d4133e</UserSecretsId>
+    <UserSecretsId>dotnet-NetTunnel.TunnelNode-ddf3d02a-87e8-44ef-84b4-f3c7e8889004</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
@@ -15,8 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetTunnel.Application\NetTunnel.Application.csproj" />
-    <ProjectReference Include="..\NetTunnel.Domain\NetTunnel.Domain.csproj" />
     <ProjectReference Include="..\NetTunnel.Infrastucture\NetTunnel.Infrastucture.csproj" />
   </ItemGroup>
 </Project>
